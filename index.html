@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="小遊戲">
+  <meta name="robots" content="noindex, nofollow">
+  <title>小遊戲</title>
+  <style>
+/* 4歲小孩學習小遊戲共用樣式，無外部資源、無追蹤 */
+:root {
+  --bg1: #7ec8f8;
+  --bg2: #ffe08a;
+  --card: #fffdf8;
+  --ink: #2b2418;
+  --accent: #ff7a59;
+  --ok: #2fa36b;
+  --soft: #fff3c8;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  font-family: "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", "Heiti TC", sans-serif;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--bg1) 0%, #b8e3ff 40%, var(--bg2) 100%);
+  overflow: hidden;
+  user-select: none; -webkit-user-select: none;
+}
+body {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+button {
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+#app {
+  height: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 16px 18px;
+  position: relative;
+}
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 48px;
+  gap: 8px;
+}
+.stars {
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+  min-height: 1.4em;
+  flex: 1;
+  text-align: center;
+}
+.icon-btn {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  font-size: 1.35rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  flex-shrink: 0;
+}
+.icon-btn:active { transform: scale(0.94); }
+.screen { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 0; }
+.screen.active { display: flex; }
+h1 {
+  margin: 6px 0 4px;
+  font-size: clamp(2.2rem, 9vw, 3.4rem);
+  line-height: 1.15;
+}
+.subtitle { font-size: 1.1rem; margin: 0 0 22px; opacity: 0.92; }
+ruby { ruby-position: over; }
+ruby rt { font-size: 0.42em; font-weight: 600; color: #5a4a32; letter-spacing: 0; }
+.primary {
+  min-width: 70%;
+  min-height: 72px;
+  padding: 12px 28px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.8rem;
+  font-weight: 800;
+  box-shadow: 0 8px 0 #d45638, 0 12px 20px rgba(0,0,0,0.12);
+}
+.primary:active { transform: translateY(4px); box-shadow: 0 4px 0 #d45638, 0 6px 12px rgba(0,0,0,0.12); }
+.question {
+  margin: 2px 0 10px;
+  font-size: clamp(1.6rem, 6.5vw, 2.4rem);
+  font-weight: 800;
+}
+.stage {
+  width: 100%;
+  flex: 1;
+  min-height: 140px;
+  background: var(--card);
+  border-radius: 28px;
+  box-shadow: 0 8px 24px rgba(40, 60, 90, 0.12);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 10px;
+  padding: 16px 12px;
+  margin-bottom: 14px;
+}
+.item {
+  font-size: clamp(2.2rem, 10vw, 4rem);
+  line-height: 1;
+  animation: pop-in 0.35s ease;
+}
+.item.bounce { animation: bounce 0.55s ease; }
+@keyframes pop-in { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes bounce { 0%,100% { transform: scale(1); } 40% { transform: scale(1.25) rotate(-8deg); } 70% { transform: scale(1.15) rotate(8deg); } }
+.choices {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+.choice {
+  min-height: 92px;
+  border-radius: 24px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 6px 0 #e6d7b8, 0 10px 16px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px 10px;
+  gap: 2px;
+}
+.choice .num { font-size: 2.2rem; font-weight: 900; line-height: 1; }
+.choice .zh { font-size: 1rem; font-weight: 700; }
+.choice:active { transform: translateY(3px); box-shadow: 0 3px 0 #e6d7b8, 0 6px 10px rgba(0,0,0,0.08); }
+.choice.correct {
+  background: #d9f5e5;
+  box-shadow: 0 6px 0 #2fa36b, 0 10px 16px rgba(0,0,0,0.08);
+}
+.choice.wrong {
+  background: #ffe1d8;
+  animation: shake 0.4s ease;
+}
+.choice:disabled { cursor: default; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+.feedback {
+  min-height: 2.1em;
+  font-size: 1.45rem;
+  font-weight: 800;
+  margin: 8px 0 0;
+}
+.feedback.ok { color: #187a48; }
+.feedback.try { color: #c45a2a; }
+.party { font-size: clamp(2.6rem, 12vw, 4.6rem); margin-bottom: 6px; }
+#confetti {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 20;
+}
+.bit {
+  position: absolute;
+  top: -12px;
+  width: 10px; height: 14px;
+  border-radius: 2px;
+  animation: fall linear forwards;
+}
+@keyframes fall {
+  to { transform: translateY(110vh) rotate(360deg); opacity: 0.2; }
+}
+
+/* 首頁選單 */
+.menu-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding-bottom: 8px;
+}
+.menu-card {
+  min-height: 120px;
+  border-radius: 24px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 6px 0 #e6d7b8, 0 10px 16px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 8px 14px;
+  text-decoration: none;
+  gap: 2px;
+}
+.menu-card:active { transform: translateY(3px); box-shadow: 0 3px 0 #e6d7b8; }
+.menu-card .ico { font-size: 2.3rem; line-height: 1; }
+.menu-card .ttl { font-size: 1.25rem; font-weight: 800; }
+.menu-card.wide { grid-column: 1 / -1; min-height: 100px; }
+.menu-card:nth-child(1) { background: #fff4d6; }
+.menu-card:nth-child(2) { background: #ffe4ef; }
+.menu-card:nth-child(3) { background: #e4f5ff; }
+.menu-card:nth-child(4) { background: #e7f8e8; }
+.menu-card:nth-child(5) { background: #efe6ff; }
+
+/* 顏色大塊 */
+.color-blob {
+  width: min(58vw, 240px);
+  height: min(58vw, 240px);
+  border-radius: 50%;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.16), inset 0 -12px 0 rgba(0,0,0,0.08);
+  border: 6px solid rgba(255,255,255,0.7);
+}
+.color-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,0,0,0.12);
+  margin-bottom: 2px;
+}
+.color-dot.light { border-color: #bbb; }
+
+/* 形狀 */
+.shape-wrap { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.shape {
+  width: min(46vw, 200px);
+  height: min(46vw, 200px);
+  filter: drop-shadow(0 8px 10px rgba(0,0,0,0.12));
+}
+
+/* 翻牌 */
+.mem-grid {
+  width: 100%;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  min-height: 0;
+  margin-bottom: 10px;
+}
+.mem-card {
+  background: transparent;
+  perspective: 700px;
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+}
+.mem-inner {
+  width: 100%; height: 100%;
+  min-height: 78px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.35s ease;
+}
+.mem-card.flipped .mem-inner,
+.mem-card.matched .mem-inner { transform: rotateY(180deg); }
+.mem-face {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+}
+.mem-back {
+  background: linear-gradient(160deg, #ff9a6b, #ff7a59);
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 900;
+}
+.mem-front {
+  background: #fff;
+  font-size: clamp(1.8rem, 8vw, 2.8rem);
+  transform: rotateY(180deg);
+}
+.mem-card.matched .mem-front { background: #d9f5e5; }
+
+/* 比一比 */
+.compare-row {
+  width: 100%;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  min-height: 0;
+  margin-bottom: 10px;
+}
+.compare-side {
+  background: var(--card);
+  border-radius: 24px;
+  box-shadow: 0 6px 0 #e6d7b8, 0 10px 16px rgba(0,0,0,0.08);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 8px;
+  min-height: 180px;
+}
+.compare-side:active { transform: translateY(3px); }
+.compare-side.correct { background: #d9f5e5; box-shadow: 0 6px 0 #2fa36b; }
+.compare-side.wrong { background: #ffe1d8; animation: shake 0.4s ease; }
+.compare-side .obj { font-size: clamp(1.6rem, 7vw, 2.6rem); line-height: 1; }
+.compare-side.big .obj { font-size: clamp(4rem, 20vw, 6rem); }
+.compare-side.small .obj { font-size: clamp(1.6rem, 8vw, 2.4rem); }
+
+.tiny-note { font-size: 0.9rem; opacity: 0.75; margin-top: 10px; }
+
+@media (max-height: 680px) {
+  .stage { min-height: 110px; margin-bottom: 8px; }
+  .choice { min-height: 76px; }
+  .choice .num { font-size: 1.8rem; }
+  .primary { min-height: 60px; font-size: 1.5rem; }
+  .menu-card { min-height: 100px; }
+  .mem-inner { min-height: 64px; }
+  .compare-side { min-height: 140px; }
+}
+@media (max-width: 360px) {
+  .choices { gap: 8px; }
+  .menu-grid { gap: 8px; }
+}
+
+/* 單檔合集：遊戲區塊切換 */
+.game-view {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 0;
+  width: 100%;
+}
+.game-view.active { display: flex; }
+#view-menu.game-view { align-items: center; }
+.game-view > .screen { width: 100%; }
+button.menu-card { width: 100%; color: inherit; }
+#homeBtn { display: flex; align-items: center; justify-content: center; }
+/* 手機直向時翻牌維持接近方形，不要拉滿高度 */
+#view-memory .mem-grid {
+  flex: 0 1 auto;
+  width: 100%;
+  height: auto;
+  max-width: 420px;
+  margin: 0 auto 10px;
+}
+#view-memory .mem-card {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+#view-memory .mem-inner { min-height: 0; }
+#view-memory .mem-grid { gap: 8px; max-width: min(100%, 400px, calc(100vh - 230px)); }
+#view-memory .mem-front { font-size: clamp(1.6rem, 9vw, 2.6rem); }
+#view-memory .mem-back { font-size: 1.6rem; }
+
+/* v2：選單可捲動、10 張卡片 */
+#view-menu { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: 12px; }
+#view-menu .party { font-size: 2.2rem; margin-bottom: 0; }
+#view-menu h1 { font-size: 2.3rem; margin: 2px 0; }
+#view-menu .subtitle { margin-bottom: 12px; }
+.menu-card { min-height: 104px; }
+.menu-card:nth-child(6) { background: #fff0e0; }
+.menu-card:nth-child(7) { background: #e9f9ef; }
+.menu-card:nth-child(8) { background: #fdeaea; }
+.menu-card:nth-child(9) { background: #e8f0ff; }
+.menu-card:nth-child(10) { background: #fff8d0; }
+/* v2：新遊戲 */
+.choices.cols2 { grid-template-columns: 1fr 1fr; }
+.choices.rows { grid-template-columns: 1fr; gap: 10px; }
+.choice .emo { font-size: clamp(2.6rem, 13vw, 3.8rem); line-height: 1.05; }
+.choice .name { font-size: 1.35rem; font-weight: 800; }
+.choice.grp-btn { min-height: 66px; flex-direction: row; flex-wrap: wrap; gap: 2px 6px; padding: 8px 10px; }
+.choice.grp-btn .g { font-size: clamp(1.3rem, 6vw, 1.7rem); line-height: 1.1; }
+.odd-grid { flex: 1; min-height: 0; margin-bottom: 4px; }
+.odd-grid .choice { min-height: 130px; }
+.odd-grid .choice .emo { font-size: clamp(3.4rem, 18vw, 5rem); }
+.big-emoji { font-size: clamp(5rem, 30vw, 8rem); line-height: 1; animation: pop-in 0.35s ease; }
+.big-digit { font-size: clamp(5rem, 32vw, 8.5rem); font-weight: 900; line-height: 1; color: var(--accent); text-shadow: 0 4px 0 rgba(0,0,0,0.08); }
+.digit-zh { font-size: 1.8rem; font-weight: 800; width: 100%; }
+.seq { display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 4px; width: 100%; }
+.seq .s { font-size: clamp(1.7rem, 8.5vw, 2.8rem); line-height: 1; animation: pop-in 0.35s ease; }
+.seq .q { display: inline-flex; align-items: center; justify-content: center; width: clamp(2.6rem, 12vw, 3.6rem); height: clamp(2.6rem, 12vw, 3.6rem); border: 3px dashed #ff7a59; border-radius: 14px; font-size: clamp(1.5rem, 7vw, 2.4rem); color: #ff7a59; font-weight: 900; }
+.say-btn { width: 88px; height: 88px; border-radius: 50%; background: #ffe08a; font-size: 2.6rem; box-shadow: 0 6px 0 #e0b84a, 0 10px 16px rgba(0,0,0,0.1); }
+.say-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #e0b84a; }
+.say-word { font-size: clamp(2.2rem, 10vw, 3rem); font-weight: 900; width: 100%; }
+@media (max-height: 680px) {
+  .odd-grid .choice { min-height: 100px; }
+  .say-btn { width: 70px; height: 70px; font-size: 2rem; }
+}
+
+/* v3：念題目時選項變暗、正在念的選項放大發光、念完恢復 */
+.qrow { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; width: 100%; margin: 2px 0 8px; }
+.qrow .question { margin: 0; }
+.replay-btn { display: inline-flex; align-items: center; gap: 4px; min-height: 46px; padding: 4px 12px 4px 10px; border-radius: 999px; background: #fff; color: var(--ink); box-shadow: 0 3px 0 #e6d7b8, 0 6px 12px rgba(0,0,0,0.08); font-size: 1.35rem; font-weight: 800; flex-shrink: 0; }
+.replay-btn span { font-size: 0.85rem; }
+.replay-btn:active { transform: translateY(2px); }
+.choice, .compare-side, .mem-card { transition: opacity 0.25s ease, filter 0.25s ease, transform 0.2s ease, box-shadow 0.2s ease; }
+.waiting .choice, .compare-row.waiting .compare-side, .mem-grid.waiting .mem-card { opacity: 0.45; filter: saturate(0.5); }
+.choice.reading { opacity: 1 !important; filter: none !important; transform: scale(1.08); box-shadow: 0 0 0 5px #ffd166, 0 10px 20px rgba(0,0,0,0.15); position: relative; z-index: 2; }
+.ready-flash .choice, .ready-flash .compare-side, .ready-flash .mem-card { animation: ready-pop 0.4s ease; }
+@keyframes ready-pop { 50% { transform: scale(1.06); } }
+  </style>
+</head>
+<body>
+  <div id="confetti"></div>
+  <div id="app">
+    <div class="topbar">
+      <button class="icon-btn" id="homeBtn" type="button" aria-label="回到選單" style="visibility:hidden">🏠</button>
+      <div class="stars" id="stars" aria-hidden="true"></div>
+      <button class="icon-btn" id="muteBtn" type="button" aria-label="開關音效" style="visibility:hidden">🔊</button>
+    </div>
+
+    <div id="view-menu" class="game-view active" style="justify-content:flex-start; padding-top: 4px;">
+      <div class="party" aria-hidden="true">🎈⭐🍎</div>
+      <h1><ruby>小<rt>ㄒㄧㄠˇ</rt></ruby><ruby>遊<rt>ㄧㄡˊ</rt></ruby><ruby>戲<rt>ㄒㄧˋ</rt></ruby></h1>
+      <p class="subtitle"><ruby>選<rt>ㄒㄩㄢˇ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>個<rt>ㄍㄜ˙</rt></ruby><ruby>開<rt>ㄎㄞ</rt></ruby><ruby>始<rt>ㄕˇ</rt></ruby></p>
+      <div class="menu-grid">
+        <button class="menu-card" type="button" data-game="count">
+          <span class="ico">🍎</span>
+          <span class="ttl"><ruby>數<rt>ㄕㄨˇ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>數<rt>ㄕㄨˇ</rt></ruby></span>
+        </button>
+        <button class="menu-card" type="button" data-game="colors">
+          <span class="ico">🎨</span>
+          <span class="ttl"><ruby>認<rt>ㄖㄣˋ</rt></ruby><ruby>顏<rt>ㄧㄢˊ</rt></ruby><ruby>色<rt>ㄙㄜˋ</rt></ruby></span>
+        </button>
+        <button class="menu-card" type="button" data-game="shapes">
+          <span class="ico">⭐</span>
+          <span class="ttl"><ruby>認<rt>ㄖㄣˋ</rt></ruby><ruby>形<rt>ㄒㄧㄥˊ</rt></ruby><ruby>狀<rt>ㄓㄨㄤˋ</rt></ruby></span>
+        </button>
+        <button class="menu-card" type="button" data-game="memory">
+          <span class="ico">🐾</span>
+          <span class="ttl"><ruby>翻<rt>ㄈㄢ</rt></ruby><ruby>牌<rt>ㄆㄞˊ</rt></ruby><ruby>配<rt>ㄆㄟˋ</rt></ruby><ruby>對<rt>ㄉㄨㄟˋ</rt></ruby></span>
+        </button>
+        <button class="menu-card" type="button" data-game="compare">
+          <span class="ico">🔍</span>
+          <span class="ttl"><ruby>比<rt>ㄅㄧˇ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>比<rt>ㄅㄧˇ</rt></ruby></span>
+        </button>
+        <button class="menu-card" type="button" data-game="animals">
+          <span class="ico">🦁</span>
+          <span class="ttl"><ruby>認<rt>ㄖㄣˋ</rt></ruby><ruby>動<rt>ㄉㄨㄥˋ</rt></ruby><ruby>物<rt>ㄨˋ</rt></ruby></span>
+        </button>
+        <button class="menu-card" type="button" data-game="fruit">
+          <span class="ico">🍌</span>
+          <span class="ttl"><ruby>水<rt>ㄕㄨㄟˇ</rt></ruby><ruby>果<rt>ㄍㄨㄛˇ</rt></ruby><ruby>蔬<rt>ㄕㄨ</rt></ruby><ruby>菜<rt>ㄘㄞˋ</rt></ruby></span>
+        </button>
+        <button class="menu-card" type="button" data-game="odd">
+          <span class="ico">🧐</span>
+          <span class="ttl"><ruby>哪<rt>ㄋㄚˇ</rt></ruby><ruby>個<rt>ㄍㄜ˙</rt></ruby><ruby>不<rt>ㄅㄨˋ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>樣<rt>ㄧㄤˋ</rt></ruby></span>
+        </button>
+        <button class="menu-card" type="button" data-game="pattern">
+          <span class="ico">🍎🍌</span>
+          <span class="ttl"><ruby>下<rt>ㄒㄧㄚˋ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>個<rt>ㄍㄜ˙</rt></ruby></span>
+        </button>
+        <button class="menu-card" type="button" data-game="numbers">
+          <span class="ico">🔢</span>
+          <span class="ttl"><ruby>數<rt>ㄕㄨˋ</rt></ruby><ruby>字<rt>ㄗˋ</rt></ruby><ruby>配<rt>ㄆㄟˋ</rt></ruby><ruby>對<rt>ㄉㄨㄟˋ</rt></ruby></span>
+        </button>
+      </div>
+    </div>
+
+    <div id="view-count" class="game-view">
+      <section id="count-home" class="screen active">
+        <div class="party" aria-hidden="true">🎈⭐🍎</div>
+        <h1><ruby>數<rt>ㄕㄨˇ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>數<rt>ㄕㄨˇ</rt></ruby></h1>
+        <p class="subtitle"><ruby>看<rt>ㄎㄢˋ</rt></ruby><ruby>看<rt>ㄎㄢˋ</rt></ruby><ruby>有<rt>ㄧㄡˇ</rt></ruby><ruby>幾<rt>ㄐㄧˇ</rt></ruby><ruby>個<rt>ㄍㄜ˙</rt></ruby>，<ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>點<rt>ㄉㄧㄢˇ</rt></ruby><ruby>數<rt>ㄕㄨˋ</rt></ruby><ruby>字<rt>ㄗˋ</rt></ruby></p>
+        <button class="primary" id="count-startBtn" type="button"><ruby>開<rt>ㄎㄞ</rt></ruby><ruby>始<rt>ㄕˇ</rt></ruby></button>
+      </section>
+      <section id="count-play" class="screen">
+        <div class="qrow"><h2 class="question"><ruby>有<rt>ㄧㄡˇ</rt></ruby><ruby>幾<rt>ㄐㄧˇ</rt></ruby><ruby>個<rt>ㄍㄜ˙</rt></ruby>？</h2><button class="replay-btn" type="button" data-replay aria-label="再聽一次">🔊<span><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>聽<rt>ㄊㄧㄥ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></span></button></div>
+        <div class="stage" id="count-stage" aria-live="polite"></div>
+        <div class="choices" id="count-choices"></div>
+        <div class="feedback" id="count-feedback" aria-live="polite"></div>
+      </section>
+      <section id="count-done" class="screen">
+        <div class="party" aria-hidden="true">🎉🌟🎉</div>
+        <h1><ruby>好<rt>ㄏㄠˇ</rt></ruby><ruby>棒<rt>ㄅㄤˋ</rt></ruby>！</h1>
+        <p class="subtitle"><ruby>你<rt>ㄋㄧˇ</rt></ruby><ruby>都<rt>ㄉㄡ</rt></ruby><ruby>會<rt>ㄏㄨㄟˋ</rt></ruby><ruby>數<rt>ㄕㄨˇ</rt></ruby>了！</p>
+        <button class="primary" id="count-againBtn" type="button"><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>玩<rt>ㄨㄢˊ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></button>
+      </section>
+    </div>
+
+    <div id="view-colors" class="game-view">
+      <section id="colors-home" class="screen active">
+        <div class="party" aria-hidden="true">🎨🌈</div>
+        <h1><ruby>認<rt>ㄖㄣˋ</rt></ruby><ruby>顏<rt>ㄧㄢˊ</rt></ruby><ruby>色<rt>ㄙㄜˋ</rt></ruby></h1>
+        <p class="subtitle"><ruby>看<rt>ㄎㄢˋ</rt></ruby><ruby>看<rt>ㄎㄢˋ</rt></ruby><ruby>是<rt>ㄕˋ</rt></ruby><ruby>什<rt>ㄕㄣˊ</rt></ruby><ruby>麼<rt>ㄇㄜ˙</rt></ruby><ruby>顏<rt>ㄧㄢˊ</rt></ruby><ruby>色<rt>ㄙㄜˋ</rt></ruby></p>
+        <button class="primary" id="colors-startBtn" type="button"><ruby>開<rt>ㄎㄞ</rt></ruby><ruby>始<rt>ㄕˇ</rt></ruby></button>
+      </section>
+      <section id="colors-play" class="screen">
+        <div class="qrow"><h2 class="question"><ruby>這<rt>ㄓㄜˋ</rt></ruby><ruby>是<rt>ㄕˋ</rt></ruby><ruby>什<rt>ㄕㄣˊ</rt></ruby><ruby>麼<rt>ㄇㄜ˙</rt></ruby><ruby>顏<rt>ㄧㄢˊ</rt></ruby><ruby>色<rt>ㄙㄜˋ</rt></ruby>？</h2><button class="replay-btn" type="button" data-replay aria-label="再聽一次">🔊<span><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>聽<rt>ㄊㄧㄥ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></span></button></div>
+        <div class="stage" id="colors-stage"><div class="color-blob" id="colors-blob"></div></div>
+        <div class="choices" id="colors-choices"></div>
+        <div class="feedback" id="colors-feedback" aria-live="polite"></div>
+      </section>
+      <section id="colors-done" class="screen">
+        <div class="party" aria-hidden="true">🎉🌈🎉</div>
+        <h1><ruby>好<rt>ㄏㄠˇ</rt></ruby><ruby>棒<rt>ㄅㄤˋ</rt></ruby>！</h1>
+        <p class="subtitle"><ruby>你<rt>ㄋㄧˇ</rt></ruby><ruby>都<rt>ㄉㄡ</rt></ruby><ruby>認<rt>ㄖㄣˋ</rt></ruby><ruby>得<rt>ㄉㄜ˙</rt></ruby>了！</p>
+        <button class="primary" id="colors-againBtn" type="button"><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>玩<rt>ㄨㄢˊ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></button>
+      </section>
+    </div>
+
+    <div id="view-shapes" class="game-view">
+      <section id="shapes-home" class="screen active">
+        <div class="party" aria-hidden="true">⭐🔺🟦</div>
+        <h1><ruby>認<rt>ㄖㄣˋ</rt></ruby><ruby>形<rt>ㄒㄧㄥˊ</rt></ruby><ruby>狀<rt>ㄓㄨㄤˋ</rt></ruby></h1>
+        <p class="subtitle"><ruby>看<rt>ㄎㄢˋ</rt></ruby><ruby>看<rt>ㄎㄢˋ</rt></ruby><ruby>是<rt>ㄕˋ</rt></ruby><ruby>什<rt>ㄕㄣˊ</rt></ruby><ruby>麼<rt>ㄇㄜ˙</rt></ruby><ruby>形<rt>ㄒㄧㄥˊ</rt></ruby><ruby>狀<rt>ㄓㄨㄤˋ</rt></ruby></p>
+        <button class="primary" id="shapes-startBtn" type="button"><ruby>開<rt>ㄎㄞ</rt></ruby><ruby>始<rt>ㄕˇ</rt></ruby></button>
+      </section>
+      <section id="shapes-play" class="screen">
+        <div class="qrow"><h2 class="question"><ruby>這<rt>ㄓㄜˋ</rt></ruby><ruby>是<rt>ㄕˋ</rt></ruby><ruby>什<rt>ㄕㄣˊ</rt></ruby><ruby>麼<rt>ㄇㄜ˙</rt></ruby><ruby>形<rt>ㄒㄧㄥˊ</rt></ruby><ruby>狀<rt>ㄓㄨㄤˋ</rt></ruby>？</h2><button class="replay-btn" type="button" data-replay aria-label="再聽一次">🔊<span><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>聽<rt>ㄊㄧㄥ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></span></button></div>
+        <div class="stage" id="shapes-stage"><div class="shape-wrap" id="shapes-shapeBox"></div></div>
+        <div class="choices" id="shapes-choices"></div>
+        <div class="feedback" id="shapes-feedback" aria-live="polite"></div>
+      </section>
+      <section id="shapes-done" class="screen">
+        <div class="party" aria-hidden="true">🎉⭐🎉</div>
+        <h1><ruby>好<rt>ㄏㄠˇ</rt></ruby><ruby>棒<rt>ㄅㄤˋ</rt></ruby>！</h1>
+        <p class="subtitle"><ruby>你<rt>ㄋㄧˇ</rt></ruby><ruby>都<rt>ㄉㄡ</rt></ruby><ruby>認<rt>ㄖㄣˋ</rt></ruby><ruby>得<rt>ㄉㄜ˙</rt></ruby>了！</p>
+        <button class="primary" id="shapes-againBtn" type="button"><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>玩<rt>ㄨㄢˊ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></button>
+      </section>
+    </div>
+
+    <div id="view-memory" class="game-view">
+      <section id="memory-home" class="screen active">
+        <div class="party" aria-hidden="true">🐶🐱🐻</div>
+        <h1><ruby>翻<rt>ㄈㄢ</rt></ruby><ruby>牌<rt>ㄆㄞˊ</rt></ruby><ruby>配<rt>ㄆㄟˋ</rt></ruby><ruby>對<rt>ㄉㄨㄟˋ</rt></ruby></h1>
+        <p class="subtitle"><ruby>翻<rt>ㄈㄢ</rt></ruby><ruby>開<rt>ㄎㄞ</rt></ruby><ruby>兩<rt>ㄌㄧㄤˇ</rt></ruby><ruby>張<rt>ㄓㄤ</rt></ruby>，<ruby>找<rt>ㄓㄠˇ</rt></ruby><ruby>相<rt>ㄒㄧㄤ</rt></ruby><ruby>同<rt>ㄊㄨㄥˊ</rt></ruby><ruby>的<rt>ㄉㄜ˙</rt></ruby><ruby>圖<rt>ㄊㄨˊ</rt></ruby><ruby>案<rt>ㄢˋ</rt></ruby></p>
+        <button class="primary" id="memory-startBtn" type="button"><ruby>開<rt>ㄎㄞ</rt></ruby><ruby>始<rt>ㄕˇ</rt></ruby></button>
+      </section>
+      <section id="memory-play" class="screen">
+        <div class="qrow"><h2 class="question"><ruby>找<rt>ㄓㄠˇ</rt></ruby><ruby>相<rt>ㄒㄧㄤ</rt></ruby><ruby>同<rt>ㄊㄨㄥˊ</rt></ruby><ruby>的<rt>ㄉㄜ˙</rt></ruby></h2><button class="replay-btn" type="button" data-replay aria-label="再聽一次">🔊<span><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>聽<rt>ㄊㄧㄥ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></span></button></div>
+        <div class="mem-grid" id="memory-grid"></div>
+        <div class="feedback" id="memory-feedback" aria-live="polite"></div>
+      </section>
+      <section id="memory-done" class="screen">
+        <div class="party" aria-hidden="true">🎉🐾🎉</div>
+        <h1><ruby>好<rt>ㄏㄠˇ</rt></ruby><ruby>棒<rt>ㄅㄤˋ</rt></ruby>！</h1>
+        <p class="subtitle"><ruby>全<rt>ㄑㄩㄢˊ</rt></ruby><ruby>部<rt>ㄅㄨˋ</rt></ruby><ruby>找<rt>ㄓㄠˇ</rt></ruby><ruby>到<rt>ㄉㄠˋ</rt></ruby>了！</p>
+        <button class="primary" id="memory-againBtn" type="button"><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>玩<rt>ㄨㄢˊ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></button>
+      </section>
+    </div>
+
+    <div id="view-compare" class="game-view">
+      <section id="compare-home" class="screen active">
+        <div class="party" aria-hidden="true">🍎🍎 🍎</div>
+        <h1><ruby>比<rt>ㄅㄧˇ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>比<rt>ㄅㄧˇ</rt></ruby></h1>
+        <p class="subtitle"><ruby>看<rt>ㄎㄢˋ</rt></ruby><ruby>看<rt>ㄎㄢˋ</rt></ruby><ruby>哪<rt>ㄋㄚˇ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>邊<rt>ㄅㄧㄢ</rt></ruby><ruby>比<rt>ㄅㄧˇ</rt></ruby><ruby>較<rt>ㄐㄧㄠˋ</rt></ruby><ruby>多<rt>ㄉㄨㄛ</rt></ruby>，<ruby>或<rt>ㄏㄨㄛˋ</rt></ruby><ruby>哪<rt>ㄋㄚˇ</rt></ruby><ruby>個<rt>ㄍㄜ˙</rt></ruby><ruby>比<rt>ㄅㄧˇ</rt></ruby><ruby>較<rt>ㄐㄧㄠˋ</rt></ruby><ruby>大<rt>ㄉㄚˋ</rt></ruby></p>
+        <button class="primary" id="compare-startBtn" type="button"><ruby>開<rt>ㄎㄞ</rt></ruby><ruby>始<rt>ㄕˇ</rt></ruby></button>
+      </section>
+      <section id="compare-play" class="screen">
+        <div class="qrow"><h2 class="question" id="compare-question"></h2><button class="replay-btn" type="button" data-replay aria-label="再聽一次">🔊<span><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>聽<rt>ㄊㄧㄥ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></span></button></div>
+        <div class="compare-row" id="compare-row"></div>
+        <div class="feedback" id="compare-feedback" aria-live="polite"></div>
+      </section>
+      <section id="compare-done" class="screen">
+        <div class="party" aria-hidden="true">🎉🔍🎉</div>
+        <h1><ruby>好<rt>ㄏㄠˇ</rt></ruby><ruby>棒<rt>ㄅㄤˋ</rt></ruby>！</h1>
+        <p class="subtitle"><ruby>你<rt>ㄋㄧˇ</rt></ruby><ruby>都<rt>ㄉㄡ</rt></ruby><ruby>會<rt>ㄏㄨㄟˋ</rt></ruby><ruby>比<rt>ㄅㄧˇ</rt></ruby>了！</p>
+        <button class="primary" id="compare-againBtn" type="button"><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>玩<rt>ㄨㄢˊ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></button>
+      </section>
+    </div>
+
+    <div id="view-animals" class="game-view">
+      <section id="animals-home" class="screen active">
+        <div class="party" aria-hidden="true">🐶🦁🐘</div>
+        <h1><ruby>認<rt>ㄖㄣˋ</rt></ruby><ruby>動<rt>ㄉㄨㄥˋ</rt></ruby><ruby>物<rt>ㄨˋ</rt></ruby></h1>
+        <p class="subtitle"><ruby>看<rt>ㄎㄢˋ</rt></ruby><ruby>看<rt>ㄎㄢˋ</rt></ruby><ruby>是<rt>ㄕˋ</rt></ruby><ruby>什<rt>ㄕㄣˊ</rt></ruby><ruby>麼<rt>ㄇㄜ˙</rt></ruby><ruby>動<rt>ㄉㄨㄥˋ</rt></ruby><ruby>物<rt>ㄨˋ</rt></ruby></p>
+        <button class="primary" id="animals-startBtn" type="button"><ruby>開<rt>ㄎㄞ</rt></ruby><ruby>始<rt>ㄕˇ</rt></ruby></button>
+      </section>
+      <section id="animals-play" class="screen">
+        <div class="qrow"><h2 class="question"><ruby>這<rt>ㄓㄜˋ</rt></ruby><ruby>是<rt>ㄕˋ</rt></ruby><ruby>什<rt>ㄕㄣˊ</rt></ruby><ruby>麼<rt>ㄇㄜ˙</rt></ruby><ruby>動<rt>ㄉㄨㄥˋ</rt></ruby><ruby>物<rt>ㄨˋ</rt></ruby>？</h2><button class="replay-btn" type="button" data-replay aria-label="再聽一次">🔊<span><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>聽<rt>ㄊㄧㄥ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></span></button></div>
+        <div class="stage" id="animals-stage"><span class="big-emoji" id="animals-pic"></span></div>
+        <div class="choices" id="animals-choices"></div>
+        <div class="feedback" id="animals-feedback" aria-live="polite"></div>
+      </section>
+      <section id="animals-done" class="screen">
+        <div class="party" aria-hidden="true">🎉🦁🎉</div>
+        <h1><ruby>好<rt>ㄏㄠˇ</rt></ruby><ruby>棒<rt>ㄅㄤˋ</rt></ruby>！</h1>
+        <p class="subtitle"><ruby>你<rt>ㄋㄧˇ</rt></ruby><ruby>都<rt>ㄉㄡ</rt></ruby><ruby>認<rt>ㄖㄣˋ</rt></ruby><ruby>得<rt>ㄉㄜ˙</rt></ruby><ruby>了<rt>ㄌㄜ˙</rt></ruby>！</p>
+        <button class="primary" id="animals-againBtn" type="button"><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>玩<rt>ㄨㄢˊ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></button>
+      </section>
+    </div>
+
+    <div id="view-fruit" class="game-view">
+      <section id="fruit-home" class="screen active">
+        <div class="party" aria-hidden="true">🍎🍌🥕</div>
+        <h1><ruby>水<rt>ㄕㄨㄟˇ</rt></ruby><ruby>果<rt>ㄍㄨㄛˇ</rt></ruby><ruby>蔬<rt>ㄕㄨ</rt></ruby><ruby>菜<rt>ㄘㄞˋ</rt></ruby></h1>
+        <p class="subtitle"><ruby>聽<rt>ㄊㄧㄥ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>聽<rt>ㄊㄧㄥ</rt></ruby>，<ruby>找<rt>ㄓㄠˇ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>找<rt>ㄓㄠˇ</rt></ruby></p>
+        <button class="primary" id="fruit-startBtn" type="button"><ruby>開<rt>ㄎㄞ</rt></ruby><ruby>始<rt>ㄕˇ</rt></ruby></button>
+      </section>
+      <section id="fruit-play" class="screen">
+        <div class="qrow"><h2 class="question" id="fruit-question"></h2><button class="replay-btn" type="button" data-replay aria-label="再聽一次">🔊<span><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>聽<rt>ㄊㄧㄥ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></span></button></div>
+        <div class="stage" id="fruit-stage" style="flex-direction:column;flex-wrap:nowrap;gap:18px"><button class="say-btn" id="fruit-say" type="button" aria-label="再聽一次">🔊</button><span class="say-word" id="fruit-word"></span></div>
+        <div class="choices" id="fruit-choices"></div>
+        <div class="feedback" id="fruit-feedback" aria-live="polite"></div>
+      </section>
+      <section id="fruit-done" class="screen">
+        <div class="party" aria-hidden="true">🎉🍉🎉</div>
+        <h1><ruby>好<rt>ㄏㄠˇ</rt></ruby><ruby>棒<rt>ㄅㄤˋ</rt></ruby>！</h1>
+        <p class="subtitle"><ruby>你<rt>ㄋㄧˇ</rt></ruby><ruby>好<rt>ㄏㄠˇ</rt></ruby><ruby>會<rt>ㄏㄨㄟˋ</rt></ruby><ruby>找<rt>ㄓㄠˇ</rt></ruby>！</p>
+        <button class="primary" id="fruit-againBtn" type="button"><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>玩<rt>ㄨㄢˊ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></button>
+      </section>
+    </div>
+
+    <div id="view-odd" class="game-view">
+      <section id="odd-home" class="screen active">
+        <div class="party" aria-hidden="true">🍎🍎🍌🍎</div>
+        <h1><ruby>哪<rt>ㄋㄚˇ</rt></ruby><ruby>個<rt>ㄍㄜ˙</rt></ruby><ruby>不<rt>ㄅㄨˋ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>樣<rt>ㄧㄤˋ</rt></ruby></h1>
+        <p class="subtitle"><ruby>找<rt>ㄓㄠˇ</rt></ruby><ruby>出<rt>ㄔㄨ</rt></ruby><ruby>不<rt>ㄅㄨˋ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>樣<rt>ㄧㄤˋ</rt></ruby><ruby>的<rt>ㄉㄜ˙</rt></ruby><ruby>那<rt>ㄋㄚˋ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>個<rt>ㄍㄜ˙</rt></ruby></p>
+        <button class="primary" id="odd-startBtn" type="button"><ruby>開<rt>ㄎㄞ</rt></ruby><ruby>始<rt>ㄕˇ</rt></ruby></button>
+      </section>
+      <section id="odd-play" class="screen">
+        <div class="qrow"><h2 class="question"><ruby>哪<rt>ㄋㄚˇ</rt></ruby><ruby>個<rt>ㄍㄜ˙</rt></ruby><ruby>不<rt>ㄅㄨˋ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>樣<rt>ㄧㄤˋ</rt></ruby>？</h2><button class="replay-btn" type="button" data-replay aria-label="再聽一次">🔊<span><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>聽<rt>ㄊㄧㄥ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></span></button></div>
+        <div class="choices cols2 odd-grid" id="odd-choices"></div>
+        <div class="feedback" id="odd-feedback" aria-live="polite"></div>
+      </section>
+      <section id="odd-done" class="screen">
+        <div class="party" aria-hidden="true">🎉🧐🎉</div>
+        <h1><ruby>好<rt>ㄏㄠˇ</rt></ruby><ruby>棒<rt>ㄅㄤˋ</rt></ruby>！</h1>
+        <p class="subtitle"><ruby>你<rt>ㄋㄧˇ</rt></ruby><ruby>好<rt>ㄏㄠˇ</rt></ruby><ruby>會<rt>ㄏㄨㄟˋ</rt></ruby><ruby>找<rt>ㄓㄠˇ</rt></ruby>！</p>
+        <button class="primary" id="odd-againBtn" type="button"><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>玩<rt>ㄨㄢˊ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></button>
+      </section>
+    </div>
+
+    <div id="view-pattern" class="game-view">
+      <section id="pattern-home" class="screen active">
+        <div class="party" aria-hidden="true">🍎🍌🍎🍌❓</div>
+        <h1><ruby>下<rt>ㄒㄧㄚˋ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>個<rt>ㄍㄜ˙</rt></ruby></h1>
+        <p class="subtitle"><ruby>猜<rt>ㄘㄞ</rt></ruby><ruby>猜<rt>ㄘㄞ</rt></ruby><ruby>下<rt>ㄒㄧㄚˋ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>個<rt>ㄍㄜ˙</rt></ruby><ruby>是<rt>ㄕˋ</rt></ruby><ruby>什<rt>ㄕㄣˊ</rt></ruby><ruby>麼<rt>ㄇㄜ˙</rt></ruby></p>
+        <button class="primary" id="pattern-startBtn" type="button"><ruby>開<rt>ㄎㄞ</rt></ruby><ruby>始<rt>ㄕˇ</rt></ruby></button>
+      </section>
+      <section id="pattern-play" class="screen">
+        <div class="qrow"><h2 class="question"><ruby>下<rt>ㄒㄧㄚˋ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>個<rt>ㄍㄜ˙</rt></ruby><ruby>是<rt>ㄕˋ</rt></ruby><ruby>什<rt>ㄕㄣˊ</rt></ruby><ruby>麼<rt>ㄇㄜ˙</rt></ruby>？</h2><button class="replay-btn" type="button" data-replay aria-label="再聽一次">🔊<span><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>聽<rt>ㄊㄧㄥ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></span></button></div>
+        <div class="stage" id="pattern-stage"><div class="seq" id="pattern-seq"></div></div>
+        <div class="choices" id="pattern-choices"></div>
+        <div class="feedback" id="pattern-feedback" aria-live="polite"></div>
+      </section>
+      <section id="pattern-done" class="screen">
+        <div class="party" aria-hidden="true">🎉🍌🎉</div>
+        <h1><ruby>好<rt>ㄏㄠˇ</rt></ruby><ruby>棒<rt>ㄅㄤˋ</rt></ruby>！</h1>
+        <p class="subtitle"><ruby>你<rt>ㄋㄧˇ</rt></ruby><ruby>好<rt>ㄏㄠˇ</rt></ruby><ruby>會<rt>ㄏㄨㄟˋ</rt></ruby><ruby>猜<rt>ㄘㄞ</rt></ruby>！</p>
+        <button class="primary" id="pattern-againBtn" type="button"><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>玩<rt>ㄨㄢˊ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></button>
+      </section>
+    </div>
+
+    <div id="view-numbers" class="game-view">
+      <section id="numbers-home" class="screen active">
+        <div class="party" aria-hidden="true">1️⃣2️⃣3️⃣</div>
+        <h1><ruby>數<rt>ㄕㄨˋ</rt></ruby><ruby>字<rt>ㄗˋ</rt></ruby><ruby>配<rt>ㄆㄟˋ</rt></ruby><ruby>對<rt>ㄉㄨㄟˋ</rt></ruby></h1>
+        <p class="subtitle"><ruby>看<rt>ㄎㄢˋ</rt></ruby><ruby>數<rt>ㄕㄨˋ</rt></ruby><ruby>字<rt>ㄗˋ</rt></ruby>，<ruby>找<rt>ㄓㄠˇ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>樣<rt>ㄧㄤˋ</rt></ruby><ruby>多<rt>ㄉㄨㄛ</rt></ruby><ruby>的<rt>ㄉㄜ˙</rt></ruby></p>
+        <button class="primary" id="numbers-startBtn" type="button"><ruby>開<rt>ㄎㄞ</rt></ruby><ruby>始<rt>ㄕˇ</rt></ruby></button>
+      </section>
+      <section id="numbers-play" class="screen">
+        <div class="qrow"><h2 class="question"><ruby>哪<rt>ㄋㄚˇ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>排<rt>ㄆㄞˊ</rt></ruby><ruby>有<rt>ㄧㄡˇ</rt></ruby><ruby>這<rt>ㄓㄜˋ</rt></ruby><ruby>麼<rt>ㄇㄜ˙</rt></ruby><ruby>多<rt>ㄉㄨㄛ</rt></ruby>？</h2><button class="replay-btn" type="button" data-replay aria-label="再聽一次">🔊<span><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>聽<rt>ㄊㄧㄥ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></span></button></div>
+        <div class="stage" id="numbers-stage" style="flex-direction:column;gap:0"><div class="big-digit" id="numbers-digit"></div><div class="digit-zh" id="numbers-zh"></div></div>
+        <div class="choices rows" id="numbers-choices"></div>
+        <div class="feedback" id="numbers-feedback" aria-live="polite"></div>
+      </section>
+      <section id="numbers-done" class="screen">
+        <div class="party" aria-hidden="true">🎉🔢🎉</div>
+        <h1><ruby>好<rt>ㄏㄠˇ</rt></ruby><ruby>棒<rt>ㄅㄤˋ</rt></ruby>！</h1>
+        <p class="subtitle"><ruby>你<rt>ㄋㄧˇ</rt></ruby><ruby>都<rt>ㄉㄡ</rt></ruby><ruby>會<rt>ㄏㄨㄟˋ</rt></ruby><ruby>數<rt>ㄕㄨˇ</rt></ruby><ruby>了<rt>ㄌㄜ˙</rt></ruby>！</p>
+        <button class="primary" id="numbers-againBtn" type="button"><ruby>再<rt>ㄗㄞˋ</rt></ruby><ruby>玩<rt>ㄨㄢˊ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>次<rt>ㄘˋ</rt></ruby></button>
+      </section>
+    </div>
+  </div>
+  <script>
+/* 共用：音效、彩帶、靜音。不收集資料，也不寫入本機儲存。 */
+(function (global) {
+  let soundOn = true;
+  let audioCtx = null;
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) audioCtx = new Ctx();
+    }
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  }
+
+  function tone(freq, start, dur, type, gain, endFreq) {
+    if (!soundOn || !audioCtx) return;
+    const t0 = audioCtx.currentTime + start;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t0);
+    if (endFreq) o.frequency.exponentialRampToValueAtTime(endFreq, t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(gain, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(t0);
+    o.stop(t0 + dur + 0.03);
+  }
+
+  /* 音效組合：5 種答對、5 種答錯（同一份資料也拿去產生 WAV 試聽檔） */
+  const SOUNDS = {"correct": [{"id": "c1", "name": "叮鈴號角", "desc": "清亮的「叮～鈴」再接一段上行小號角和弦（目前預設）", "notes": [[1318.5, 0, 0.55, "sine", 0.1], [2637, 0, 0.3, "sine", 0.03], [1760, 0.08, 0.6, "sine", 0.08], [392, 0.2, 0.15, "triangle", 0.13], [523.25, 0.3, 0.15, "triangle", 0.13], [659.25, 0.4, 0.15, "triangle", 0.13], [783.99, 0.5, 0.15, "triangle", 0.13], [1046.5, 0.62, 0.5, "triangle", 0.09], [783.99, 0.62, 0.5, "triangle", 0.09], [659.25, 0.62, 0.5, "triangle", 0.09], [523.25, 0.62, 0.5, "square", 0.02]]}, {"id": "c2", "name": "叮咚鈴", "desc": "兩聲明亮的鈴聲「叮～咚～」，像門鈴一樣往上揚", "notes": [[1046.5, 0, 0.7, "sine", 0.12], [2093, 0, 0.35, "sine", 0.04], [3139.5, 0, 0.18, "sine", 0.015], [1568, 0.28, 0.9, "sine", 0.12], [3136, 0.28, 0.4, "sine", 0.04], [4704, 0.28, 0.2, "sine", 0.012]]}, {"id": "c3", "name": "星星閃閃", "desc": "一串快速往上爬的亮晶晶小音符，像星星在閃", "notes": [[1046.5, 0, 0.25, "sine", 0.09], [1318.5, 0.07, 0.25, "sine", 0.09], [1568, 0.14, 0.25, "sine", 0.09], [2093, 0.21, 0.3, "sine", 0.09], [2637, 0.28, 0.35, "sine", 0.08], [3136, 0.35, 0.5, "sine", 0.07], [2093, 0.42, 0.6, "triangle", 0.05], [1568, 0.42, 0.6, "triangle", 0.04]]}, {"id": "c4", "name": "小喇叭", "desc": "活潑的「噠噠噠～噠！」小喇叭勝利曲", "notes": [[392, 0, 0.12, "sawtooth", 0.045], [392, 0.14, 0.12, "sawtooth", 0.045], [392, 0.28, 0.12, "sawtooth", 0.045], [523.25, 0.42, 0.55, "sawtooth", 0.05], [659.25, 0.42, 0.55, "triangle", 0.08], [783.99, 0.42, 0.55, "triangle", 0.06], [392, 0, 0.12, "triangle", 0.08], [392, 0.14, 0.12, "triangle", 0.08], [392, 0.28, 0.12, "triangle", 0.08]]}, {"id": "c5", "name": "彈跳泡泡", "desc": "三個「啵、啵、啵！」往上跳的泡泡聲，一個比一個高", "notes": [[400, 0, 0.14, "sine", 0.14, 800], [500, 0.16, 0.14, "sine", 0.14, 1000], [600, 0.32, 0.18, "sine", 0.14, 1200], [1568, 0.52, 0.45, "sine", 0.08], [2093, 0.52, 0.45, "sine", 0.05]]}], "wrong": [{"id": "w1", "name": "咚嗚", "desc": "兩個柔和往下滑的低音「咚～嗚」（目前預設）", "notes": [[330, 0, 0.22, "sine", 0.12, 262], [247, 0.2, 0.36, "sine", 0.12, 156], [124, 0.2, 0.32, "triangle", 0.05, 82]]}, {"id": "w2", "name": "軟軟彈簧", "desc": "一聲軟軟的「啵嗯～」彈簧聲，往下彈兩次", "notes": [[300, 0, 0.22, "sine", 0.13, 150], [220, 0.2, 0.3, "sine", 0.11, 120], [150, 0, 0.22, "triangle", 0.04, 75]]}, {"id": "w3", "name": "嗯嗯", "desc": "兩聲輕輕的低音「嗯～嗯」，像在說「再想想」", "notes": [[220, 0, 0.2, "sine", 0.12], [440, 0, 0.2, "sine", 0.02], [196, 0.26, 0.3, "sine", 0.12], [392, 0.26, 0.3, "sine", 0.02]]}, {"id": "w4", "name": "木琴下樓梯", "desc": "三個柔和的木琴音一階一階往下走", "notes": [[392, 0, 0.22, "sine", 0.12], [1176, 0, 0.06, "sine", 0.02], [329.63, 0.15, 0.22, "sine", 0.12], [989, 0.15, 0.06, "sine", 0.02], [261.63, 0.3, 0.35, "sine", 0.12], [785, 0.3, 0.06, "sine", 0.02]]}, {"id": "w5", "name": "洩氣小氣球", "desc": "像小氣球慢慢洩氣的「咻～」往下滑音，好笑不嚇人", "notes": [[520, 0, 0.55, "triangle", 0.09, 200], [260, 0, 0.55, "sine", 0.05, 100]]}]};
+  let yesId = "c1", noId = "w1";
+  function playPreset(list, id) {
+    ensureAudio();
+    const p = list.find((x) => x.id === id) || list[0];
+    p.notes.forEach((n) => tone(n[0], n[1], n[2], n[3], n[4], n[5]));
+  }
+  function playYes() { playPreset(SOUNDS.correct, yesId); }
+  function playNo() { playPreset(SOUNDS.wrong, noId); }
+  function setSounds(y, n) { if (y) yesId = y; if (n) noId = n; }
+
+  /* 語音：中文（zh-TW）再英文（en-US），失敗就安靜略過 */
+  let session = 0;
+  const synth = ("speechSynthesis" in window) ? window.speechSynthesis : null;
+  let voices = [];
+  const keepAlive = [];
+  const stats = { advances: 0 };
+  function loadVoices() { try { voices = (synth && synth.getVoices()) || []; } catch (e) { voices = []; } }
+  if (synth) {
+    loadVoices();
+    try {
+      if (synth.addEventListener) synth.addEventListener("voiceschanged", loadVoices);
+      else synth.onvoiceschanged = loadVoices;
+    } catch (e) {}
+  }
+  const norm = (v) => String((v && v.lang) || "").replace(/_/g, "-").toLowerCase();
+  const TW_NAME = /mei-?jia|美佳|hanhan|yating|zhiwei|taiwan|台灣|臺灣/i;
+  /* 只用台灣中文聲音：zh-TW 或名字看得出是台灣的；絕不選 zh-CN / zh-HK。找不到就不指定，交給系統用 zh-TW */
+  function pickZhVoice() {
+    loadVoices();
+    const ok = (v) => !/^zh-(cn|hans|sg|hk|mo)|^cmn-cn|^yue/.test(norm(v)) && !/china|mainland|中国|普通话|香港|hong ?kong|cantonese|粵/i.test(v.name || "");
+    return voices.find((v) => norm(v) === "zh-tw" && ok(v)) ||
+           voices.find((v) => /^(zh|cmn)-(hant-)?tw/.test(norm(v)) && ok(v)) ||
+           voices.find((v) => TW_NAME.test(v.name || "") && ok(v) && (!v.lang || /^(zh|cmn)/.test(norm(v)))) ||
+           null;
+  }
+  function pickEnVoice() {
+    loadVoices();
+    return voices.find((v) => norm(v) === "en-us") || voices.find((v) => norm(v).indexOf("en") === 0) || null;
+  }
+  function utter(text, lang, voice) {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang;
+    if (voice) u.voice = voice;
+    u.rate = 0.85;
+    u.pitch = 1.05;
+    u.volume = 1;
+    keepAlive.push(u);
+    if (keepAlive.length > 10) keepAlive.shift();
+    return u;
+  }
+  function stopSpeech() { if (synth) { try { synth.cancel(); } catch (e) {} } }
+  /* 估計念完要多久：中文每字 450ms、英文每字母 120ms，再加 1.5 秒，至少 4 秒 */
+  function estimateMs(zh, en) {
+    const zc = (String(zh || "").match(/[\u4e00-\u9fff]/g) || []).length;
+    const el = (String(en || "").match(/[a-z]/gi) || []).length;
+    return Math.max(4000, zc * 450 + el * 120 + 1500);
+  }
+  function clearReading() { document.querySelectorAll(".reading").forEach((e) => e.classList.remove("reading")); }
+
+  /* 依序念一串句子（中文 zh-TW、英文 en-US）。只有最後一句 onend/onerror、保險計時、或確認已經沒在念時才算念完；done 只會呼叫一次 */
+  let curSeq = null;
+  function speakSeq(items, done, delay, mutedDelay) {
+    if (curSeq) { curSeq.abandon(); curSeq = null; }
+    items = (items || []).filter((i) => i && i.text);
+    const my = session;
+    let finished = false, fb = null, poll = null, starter = null;
+    const seq = {};
+    const cleanup = () => {
+      finished = true;
+      if (fb) clearTimeout(fb);
+      if (starter) clearTimeout(starter);
+      if (poll) clearInterval(poll);
+      if (curSeq === seq) curSeq = null;
+      clearReading();
+    };
+    const finish = () => { if (finished) return; cleanup(); if (done && my === session) done(); };
+    seq.abandon = () => { if (!finished) cleanup(); };
+    seq.finish = finish;
+    curSeq = seq;
+    if (!soundOn || !synth || typeof SpeechSynthesisUtterance === "undefined" || !items.length) {
+      fb = setTimeout(finish, mutedDelay || 0);
+      return;
+    }
+    try {
+      stopSpeech();
+      let lastStart = 0, kick = 0, idle = 0;
+      const parts = items.map((it) => {
+        const zh = it.lang !== "en-US";
+        const u = utter(it.text, zh ? "zh-TW" : "en-US", zh ? pickZhVoice() : pickEnVoice());
+        u.onstart = () => {
+          if (finished) return;
+          lastStart = Date.now();
+          clearReading();
+          if (it.el) it.el.classList.add("reading");
+        };
+        u.onend = () => { if (it.el) it.el.classList.remove("reading"); };
+        return u;
+      });
+      const last = parts[parts.length - 1];
+      last.onend = () => setTimeout(finish, 250);
+      last.onerror = () => setTimeout(finish, 250);
+      let zhText = "", enText = "";
+      items.forEach((it) => { if (it.lang === "en-US") enText += it.text; else zhText += it.text; });
+      const est = estimateMs(zhText, enText) + Math.max(0, items.length - 2) * 300;
+      starter = setTimeout(() => {
+        starter = null;
+        if (finished) return;
+        if (my !== session || !soundOn) { finish(); return; }
+        kick = lastStart = Date.now();
+        try { parts.forEach((u) => synth.speak(u)); } catch (e) {}
+        fb = setTimeout(finish, est);
+        /* iOS 有時不觸發 onend：輪詢 speaking，連續兩次確認沒在念、距離最後一次開始念超過 600ms 才算念完 */
+        poll = setInterval(() => {
+          if (finished) return;
+          let busyNow = true;
+          try { busyNow = !!(synth.speaking || synth.pending); } catch (e) { busyNow = true; }
+          const now = Date.now();
+          if (!busyNow && now - lastStart >= 600 && now - kick >= 1200) {
+            idle += 1;
+            if (idle >= 2) finish();
+          } else idle = 0;
+        }, 300);
+      }, delay || 0);
+    } catch (e) {
+      fb = setTimeout(finish, mutedDelay || 0);
+    }
+  }
+  function speak(zh, en, done, delay) {
+    speakSeq([{ text: zh, lang: "zh-TW" }, { text: en, lang: "en-US" }], done, delay, done ? 1300 : 0);
+  }
+  function say(zh, en) { speak(zh, en, null, 0); }
+
+  /* 每一題開頭：念題目（和中文選項），念完之前不能點，念完選項恢復亮度 */
+  let busy = false, askTok = 0, lastAsk = null, celebrating = false;
+  function isBusy() { return busy; }
+  function ask(cfg) {
+    lastAsk = cfg;
+    const my = ++askTok;
+    const items = [];
+    if (cfg.q) items.push({ text: cfg.q, lang: "zh-TW" });
+    if (cfg.qen) items.push({ text: cfg.qen, lang: "en-US" });
+    (cfg.opts || []).forEach((o) => { if (o.text) items.push({ text: o.text, lang: "zh-TW", el: o.el }); });
+    busy = true;
+    if (cfg.box) { cfg.box.classList.remove("ready-flash"); cfg.box.classList.add("waiting"); }
+    speakSeq(items, () => {
+      if (my !== askTok) return;
+      busy = false;
+      if (cfg.box) {
+        cfg.box.classList.remove("waiting");
+        cfg.box.classList.add("ready-flash");
+        setTimeout(() => cfg.box && cfg.box.classList.remove("ready-flash"), 500);
+      }
+    }, cfg.delay == null ? 200 : cfg.delay, 0);
+  }
+  function replay() {
+    if (celebrating || !lastAsk) return;
+    ensureAudio();
+    ask(lastAsk);
+  }
+  function resetAsk() {
+    askTok += 1; busy = false; lastAsk = null; celebrating = false;
+    if (curSeq) { curSeq.abandon(); curSeq = null; }
+    stopSpeech();
+  }
+
+  /* 答對共用：音效 + 彩帶 + 念出答案，念完才進下一題 */
+  function celebrate(zh, en, next) {
+    celebrating = true;
+    playYes();
+    confetti();
+    speak(zh, en, () => { celebrating = false; if (next) next(); }, 750);
+  }
+
+  const CJK = /[\u4e00-\u9fff]/;
+  function rb(text, zy) {
+    const toks = String(zy).split(/\s+/).filter(Boolean);
+    let out = "";
+    for (const ch of text) {
+      if (CJK.test(ch) && toks.length) out += "<ruby>" + ch + "<rt>" + toks.shift() + "</rt></ruby>";
+      else out += ch;
+    }
+    return out;
+  }
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  /* 新遊戲共用的選擇題流程 */
+  function quiz(cfg) {
+    const gid = cfg.id, TOTAL = cfg.total;
+    const PRAISE = ["好棒！", "答對了！", "太厲害了！", "真聰明！"];
+    const $ = (k) => document.getElementById(gid + "-" + k);
+    let round = 0, stars = 0, locked = false, cur = null, token = 0;
+    function renderStars() { document.getElementById("stars").textContent = stars ? "⭐".repeat(Math.min(stars, 10)) : ""; }
+    function nextRound() {
+      locked = false;
+      const fbk = $("feedback");
+      fbk.textContent = ""; fbk.className = "feedback";
+      stats.advances += 1;
+      cur = cfg.make(round);
+      const box = $("choices");
+      box.innerHTML = "";
+      cur.choices.forEach((c) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "choice" + (c.cls ? " " + c.cls : "");
+        b.innerHTML = c.html;
+        if (c.label) b.setAttribute("aria-label", c.label);
+        if (c.say) b.dataset.say = c.say;
+        b.addEventListener("click", () => choose(c, b));
+        box.appendChild(b);
+      });
+      if (cur.show) cur.show();
+      ask({ q: cur.q, qen: cur.qen, box: box, opts: cur.readOpts ? [...box.children].map((b) => ({ text: b.dataset.say, el: b })) : [] });
+    }
+    function choose(c, b) {
+      if (locked || busy) return;
+      const fbk = $("feedback");
+      if (c.ok) {
+        locked = true;
+        stars += 1; renderStars();
+        b.classList.add("correct");
+        $("choices").querySelectorAll(".choice").forEach((x) => { x.disabled = true; });
+        fbk.textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)];
+        fbk.className = "feedback ok";
+        if (cur.onRight) cur.onRight();
+        round += 1;
+        const my = ++token;
+        celebrate(cur.zh, cur.en, () => {
+          if (my !== token) return;
+          token += 1;
+          if (round >= TOTAL) finish(); else nextRound();
+        });
+      } else {
+        b.classList.remove("wrong"); void b.offsetWidth; b.classList.add("wrong");
+        fbk.textContent = "再試一次";
+        fbk.className = "feedback try";
+        playNo();
+        setTimeout(() => { if (!locked) b.classList.remove("wrong"); }, 450);
+      }
+    }
+    function finish() { show(gid + "-done"); playParty(); confetti(); }
+    function start() {
+      ensureAudio();
+      round = 0; stars = 0; token += 1;
+      if (cfg.reset) cfg.reset();
+      renderStars();
+      show(gid + "-play");
+      nextRound();
+    }
+    $("startBtn").addEventListener("click", start);
+    $("againBtn").addEventListener("click", start);
+    return { replay: () => { if (cur && cur.show) cur.show(); } };
+  }
+  function playParty() {
+    ensureAudio();
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, i * 0.1, 0.22, "triangle", 0.12));
+  }
+
+  function confetti() {
+    const box = document.getElementById("confetti");
+    if (!box) return;
+    const colors = ["#ff7a59", "#ffd166", "#2fa36b", "#5aa9e6", "#c084fc", "#ff8fab"];
+    for (let i = 0; i < 36; i++) {
+      const el = document.createElement("div");
+      el.className = "bit";
+      el.style.left = Math.random() * 100 + "vw";
+      el.style.background = colors[i % colors.length];
+      el.style.animationDuration = 0.9 + Math.random() * 0.8 + "s";
+      el.style.transform = "rotate(" + Math.random() * 180 + "deg)";
+      box.appendChild(el);
+      setTimeout(() => el.remove(), 1800);
+    }
+  }
+
+  function wireMute() {
+    const btn = document.getElementById("muteBtn");
+    if (!btn) return;
+    btn.addEventListener("click", () => {
+      soundOn = !soundOn;
+      if (!soundOn) { stopSpeech(); if (curSeq) curSeq.finish(); }
+      btn.textContent = soundOn ? "🔊" : "🔇";
+      btn.setAttribute("aria-label", soundOn ? "關閉音效" : "打開音效");
+      if (soundOn) ensureAudio();
+    });
+  }
+
+  function show(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const scope = el.closest(".game-view") || document;
+    scope.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+    el.classList.add("active");
+  }
+
+  function openGame(name) {
+    session += 1; resetAsk();
+    document.querySelectorAll(".game-view").forEach((v) => v.classList.remove("active"));
+    const view = document.getElementById("view-" + name);
+    if (!view) return;
+    view.classList.add("active");
+    view.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+    const home = document.getElementById(name + "-home");
+    if (home) home.classList.add("active");
+    const homeBtn = document.getElementById("homeBtn");
+    const muteBtn = document.getElementById("muteBtn");
+    if (homeBtn) homeBtn.style.visibility = "visible";
+    if (muteBtn) muteBtn.style.visibility = "visible";
+    const stars = document.getElementById("stars");
+    if (stars) stars.textContent = "";
+  }
+
+  function goHome() {
+    session += 1; resetAsk();
+    document.querySelectorAll(".game-view").forEach((v) => v.classList.remove("active"));
+    const menu = document.getElementById("view-menu");
+    if (menu) menu.classList.add("active");
+    const homeBtn = document.getElementById("homeBtn");
+    const muteBtn = document.getElementById("muteBtn");
+    if (homeBtn) homeBtn.style.visibility = "hidden";
+    if (muteBtn) muteBtn.style.visibility = "hidden";
+    const stars = document.getElementById("stars");
+    if (stars) stars.textContent = "";
+  }
+
+  document.addEventListener("DOMContentLoaded", wireMute);
+
+  global.KidGame = { ensureAudio, playYes, playNo, playParty, confetti, show, openGame, goHome, speak, say, celebrate, rb, shuffle, quiz, stopSpeech, setSounds, SOUNDS, stats, estimateMs, pickZhVoice, ask, busy: isBusy, replay };
+})(window);
+
+
+  document.getElementById("homeBtn").addEventListener("click", () => KidGame.goHome());
+  document.querySelectorAll("[data-replay]").forEach((b) => b.addEventListener("click", () => KidGame.replay()));
+  document.querySelectorAll(".menu-card[data-game]").forEach((btn) => {
+    btn.addEventListener("click", () => KidGame.openGame(btn.getAttribute("data-game")));
+  });
+
+(function () {
+  const ZH = {1:["一","ㄧ"],2:["二","ㄦˋ"],3:["三","ㄙㄢ"],4:["四","ㄙˋ"],5:["五","ㄨˇ"],6:["六","ㄌㄧㄡˋ"],7:["七","ㄑㄧ"],8:["八","ㄅㄚ"],9:["九","ㄐㄧㄡˇ"],10:["十","ㄕˊ"]};
+  const EN = {1:"one",2:"two",3:"three",4:"four",5:"five",6:"six",7:"seven",8:"eight",9:"nine",10:"ten"};
+  const EMOJIS = ["🍎","⭐","🎈","🍓","🌼","🐟","🍪","🧸","🦋","🚗","🍊","🍇"];
+  const PRAISE = ["好棒！","答對了！","太厲害了！","真聰明！"];
+  const TOTAL = 10;
+  let round = 0, stars = 0, answer = 1, locked = false, used = [];
+  const $ = (id) => document.getElementById(id === "stars" ? "stars" : ("count-" + id));
+
+  function rubyNum(n) {
+    const [zh, zy] = ZH[n];
+    return '<span class="num">' + n + '</span><span class="zh"><ruby>' + zh + "<rt>" + zy + "</rt></ruby></span>";
+  }
+  function renderStars() { $("stars").textContent = stars ? "⭐".repeat(Math.min(stars, 10)) : ""; }
+  function pickCount() {
+    if (used.length >= 10) used = [];
+    let n, g = 0;
+    do { n = 1 + Math.floor(Math.random() * 10); g++; } while (used.includes(n) && g < 20);
+    used.push(n);
+    return n;
+  }
+  function pickChoices(correct) {
+    const pool = [];
+    for (let i = 1; i <= 10; i++) if (i !== correct) pool.push(i);
+    pool.sort((a, b) => Math.abs(a - correct) - Math.abs(b - correct));
+    const near = pool.slice(0, 5);
+    const a = near[Math.floor(Math.random() * Math.min(3, near.length))];
+    let b; do { b = near[Math.floor(Math.random() * near.length)]; } while (b === a);
+    return [correct, a, b].sort(() => Math.random() - 0.5);
+  }
+  function nextRound() {
+    locked = false;
+    $("feedback").textContent = "";
+    $("feedback").className = "feedback";
+    answer = pickCount();
+    const emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+    const stage = $("stage");
+    stage.innerHTML = "";
+    for (let i = 0; i < answer; i++) {
+      const s = document.createElement("span");
+      s.className = "item";
+      s.textContent = emoji;
+      s.style.animationDelay = i * 0.04 + "s";
+      stage.appendChild(s);
+    }
+    const box = $("choices");
+    box.innerHTML = "";
+    pickChoices(answer).forEach((n) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "choice";
+      btn.innerHTML = rubyNum(n);
+      btn.addEventListener("click", () => onChoose(n, btn));
+      box.appendChild(btn);
+    });
+    KidGame.ask({ q: "有幾個？", box: box });
+  }
+  function onChoose(n, btn) {
+    if (locked || KidGame.busy()) return;
+    if (n === answer) {
+      locked = true;
+      stars += 1;
+      renderStars();
+      btn.classList.add("correct");
+      document.querySelectorAll(".choice").forEach((b) => { b.disabled = true; });
+      document.querySelectorAll(".item").forEach((el) => el.classList.add("bounce"));
+      $("feedback").textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)];
+      $("feedback").className = "feedback ok";
+      round += 1;
+      KidGame.celebrate(ZH[answer][0], EN[answer], () => { if (round >= TOTAL) finish(); else nextRound(); });
+    } else {
+      btn.classList.remove("wrong");
+      void btn.offsetWidth;
+      btn.classList.add("wrong");
+      $("feedback").textContent = "再試一次";
+      $("feedback").className = "feedback try";
+      KidGame.playNo();
+      setTimeout(() => { if (!locked) btn.classList.remove("wrong"); }, 450);
+    }
+  }
+  function finish() { KidGame.show("count-done"); KidGame.playParty(); KidGame.confetti(); }
+  function start() {
+    KidGame.ensureAudio();
+    round = 0; stars = 0; used = [];
+    renderStars();
+    KidGame.show("count-play");
+    nextRound();
+  }
+  $("startBtn").addEventListener("click", start);
+  $("againBtn").addEventListener("click", start);
+})();
+
+(function () {
+  const COLORS = [
+    { id: "red", hex: "#e53935", zh: "紅", zy: "ㄏㄨㄥˊ" },
+    { id: "orange", hex: "#fb8c00", zh: "橘", zy: "ㄐㄩˊ" },
+    { id: "yellow", hex: "#f4d03f", zh: "黃", zy: "ㄏㄨㄤˊ", light: true },
+    { id: "green", hex: "#43a047", zh: "綠", zy: "ㄌㄩˋ" },
+    { id: "blue", hex: "#1e88e5", zh: "藍", zy: "ㄌㄢˊ" },
+    { id: "purple", hex: "#8e44ad", zh: "紫", zy: "ㄗˇ" },
+    { id: "pink", hex: "#ff8fab", zh: "粉紅", zy: "ㄈㄣˇ ㄏㄨㄥˊ" },
+    { id: "brown", hex: "#8d6e63", zh: "咖啡", zy: "ㄎㄚ ㄈㄟ" },
+    { id: "black", hex: "#2c2c2c", zh: "黑", zy: "ㄏㄟ" },
+    { id: "white", hex: "#ffffff", zh: "白", zy: "ㄅㄞˊ", light: true }
+  ];
+  const PRAISE = ["好棒！","答對了！","太厲害了！","真聰明！"];
+  const TOTAL = 10;
+  let round = 0, stars = 0, answer = null, locked = false, used = [];
+  const $ = (id) => document.getElementById(id === "stars" ? "stars" : ("colors-" + id));
+  function renderStars() { $("stars").textContent = stars ? "⭐".repeat(Math.min(stars, 10)) : ""; }
+  function pick() {
+    if (used.length >= COLORS.length) used = [];
+    let c, g = 0;
+    do { c = COLORS[Math.floor(Math.random() * COLORS.length)]; g++; } while (used.includes(c.id) && g < 20);
+    used.push(c.id);
+    return c;
+  }
+  function pickChoices(correct) {
+    const rest = COLORS.filter((c) => c.id !== correct.id).sort(() => Math.random() - 0.5);
+    return [correct, rest[0], rest[1]].sort(() => Math.random() - 0.5);
+  }
+  function label(c) {
+    return '<span class="color-dot' + (c.light ? " light" : "") + '" style="background:' + c.hex + '"></span><span class="zh">' + KidGame.rb(c.zh, c.zy) + "</span>";
+  }
+  function nextRound() {
+    locked = false;
+    $("feedback").textContent = "";
+    $("feedback").className = "feedback";
+    answer = pick();
+    $("blob").style.background = answer.hex;
+    const box = $("choices");
+    box.innerHTML = "";
+    pickChoices(answer).forEach((c) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "choice";
+      btn.innerHTML = label(c);
+      btn.dataset.say = c.zh + "色";
+      btn.addEventListener("click", () => onChoose(c, btn));
+      box.appendChild(btn);
+    });
+    KidGame.ask({ q: "這是什麼顏色？", box: box, opts: [...box.children].map((b) => ({ text: b.dataset.say, el: b })) });
+  }
+  function onChoose(c, btn) {
+    if (locked || KidGame.busy()) return;
+    if (c.id === answer.id) {
+      locked = true;
+      stars += 1; renderStars();
+      btn.classList.add("correct");
+      document.querySelectorAll(".choice").forEach((b) => { b.disabled = true; });
+      $("feedback").textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)];
+      $("feedback").className = "feedback ok";
+      round += 1;
+      KidGame.celebrate(answer.zh + "色", answer.id, () => { if (round >= TOTAL) finish(); else nextRound(); });
+    } else {
+      btn.classList.remove("wrong"); void btn.offsetWidth; btn.classList.add("wrong");
+      $("feedback").textContent = "再試一次";
+      $("feedback").className = "feedback try";
+      KidGame.playNo();
+      setTimeout(() => { if (!locked) btn.classList.remove("wrong"); }, 450);
+    }
+  }
+  function finish() { KidGame.show("colors-done"); KidGame.playParty(); KidGame.confetti(); }
+  function start() {
+    KidGame.ensureAudio();
+    round = 0; stars = 0; used = [];
+    renderStars();
+    KidGame.show("colors-play");
+    nextRound();
+  }
+  $("startBtn").addEventListener("click", start);
+  $("againBtn").addEventListener("click", start);
+})();
+
+(function () {
+  const SHAPES = [
+    { id: "circle", zh: "圓形", zy: "ㄩㄢˊ ㄒㄧㄥˊ", svg: (c) => '<svg class="shape" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="' + c + '"/></svg>' },
+    { id: "triangle", zh: "三角形", zy: "ㄙㄢ ㄐㄧㄠˇ ㄒㄧㄥˊ", svg: (c) => '<svg class="shape" viewBox="0 0 100 100"><polygon points="50,10 92,88 8,88" fill="' + c + '"/></svg>' },
+    { id: "square", zh: "正方形", zy: "ㄓㄥˋ ㄈㄤ ㄒㄧㄥˊ", svg: (c) => '<svg class="shape" viewBox="0 0 100 100"><rect x="16" y="16" width="68" height="68" rx="6" fill="' + c + '"/></svg>' },
+    { id: "rect", zh: "長方形", zy: "ㄔㄤˊ ㄈㄤ ㄒㄧㄥˊ", svg: (c) => '<svg class="shape" viewBox="0 0 100 100"><rect x="6" y="28" width="88" height="44" rx="6" fill="' + c + '"/></svg>' },
+    { id: "star", zh: "星星", zy: "ㄒㄧㄥ ㄒㄧㄥ", svg: (c) => '<svg class="shape" viewBox="0 0 100 100"><polygon points="50,8 61,38 94,38 67,58 77,90 50,70 23,90 33,58 6,38 39,38" fill="' + c + '"/></svg>' },
+    { id: "heart", zh: "愛心", zy: "ㄞˋ ㄒㄧㄣ", svg: (c) => '<svg class="shape" viewBox="0 0 100 100"><path d="M50 86 C20 64 8 46 8 30 A18 18 0 0 1 50 26 A18 18 0 0 1 92 30 C92 46 80 64 50 86Z" fill="' + c + '"/></svg>' }
+  ];
+  const SHAPE_EN = { circle: "circle", triangle: "triangle", square: "square", rect: "rectangle", star: "star", heart: "heart" };
+  const FILL = ["#e53935","#1e88e5","#43a047","#8e44ad","#fb8c00","#ff8fab","#00acc1"];
+  const PRAISE = ["好棒！","答對了！","太厲害了！","真聰明！"];
+  const TOTAL = 8;
+  let round = 0, stars = 0, answer = null, locked = false, used = [];
+  const $ = (id) => document.getElementById(id === "stars" ? "stars" : ("shapes-" + id));
+  function renderStars() { $("stars").textContent = stars ? "⭐".repeat(Math.min(stars, 10)) : ""; }
+  function pick() {
+    if (used.length >= SHAPES.length) used = [];
+    let s, g = 0;
+    do { s = SHAPES[Math.floor(Math.random() * SHAPES.length)]; g++; } while (used.includes(s.id) && g < 20);
+    used.push(s.id);
+    return s;
+  }
+  function pickChoices(correct) {
+    const rest = SHAPES.filter((s) => s.id !== correct.id).sort(() => Math.random() - 0.5);
+    return [correct, rest[0], rest[1]].sort(() => Math.random() - 0.5);
+  }
+  function nextRound() {
+    locked = false;
+    $("feedback").textContent = "";
+    $("feedback").className = "feedback";
+    answer = pick();
+    const color = FILL[Math.floor(Math.random() * FILL.length)];
+    $("shapeBox").innerHTML = answer.svg(color);
+    const box = $("choices");
+    box.innerHTML = "";
+    pickChoices(answer).forEach((s) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "choice";
+      btn.innerHTML = '<span class="zh">' + KidGame.rb(s.zh, s.zy) + "</span>";
+      btn.dataset.say = s.zh;
+      btn.addEventListener("click", () => onChoose(s, btn));
+      box.appendChild(btn);
+    });
+    KidGame.ask({ q: "這是什麼形狀？", box: box, opts: [...box.children].map((b) => ({ text: b.dataset.say, el: b })) });
+  }
+  function onChoose(s, btn) {
+    if (locked || KidGame.busy()) return;
+    if (s.id === answer.id) {
+      locked = true;
+      stars += 1; renderStars();
+      btn.classList.add("correct");
+      document.querySelectorAll(".choice").forEach((b) => { b.disabled = true; });
+      $("feedback").textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)];
+      $("feedback").className = "feedback ok";
+      round += 1;
+      KidGame.celebrate(answer.zh, SHAPE_EN[answer.id], () => { if (round >= TOTAL) finish(); else nextRound(); });
+    } else {
+      btn.classList.remove("wrong"); void btn.offsetWidth; btn.classList.add("wrong");
+      $("feedback").textContent = "再試一次";
+      $("feedback").className = "feedback try";
+      KidGame.playNo();
+      setTimeout(() => { if (!locked) btn.classList.remove("wrong"); }, 450);
+    }
+  }
+  function finish() { KidGame.show("shapes-done"); KidGame.playParty(); KidGame.confetti(); }
+  function start() {
+    KidGame.ensureAudio();
+    round = 0; stars = 0; used = [];
+    renderStars();
+    KidGame.show("shapes-play");
+    nextRound();
+  }
+  $("startBtn").addEventListener("click", start);
+  $("againBtn").addEventListener("click", start);
+})();
+
+(function () {
+  const ANIMALS = ["🐶","🐱","🐰","🐻","🐸","🐼","🐥","🐧"];
+  const NAMES = {
+    "🐶": ["小狗","dog"], "🐱": ["小貓","cat"], "🐰": ["兔子","rabbit"], "🐼": ["熊貓","panda"], "🐨": ["無尾熊","koala"],
+    "🐧": ["企鵝","penguin"], "🐥": ["小雞","chick"], "🐸": ["青蛙","frog"], "🦁": ["獅子","lion"], "🐘": ["大象","elephant"],
+    "🍎": ["蘋果","apple"], "🍌": ["香蕉","banana"], "🍓": ["草莓","strawberry"], "🍉": ["西瓜","watermelon"], "🍍": ["鳳梨","pineapple"],
+    "🥝": ["奇異果","kiwi"], "🍇": ["葡萄","grapes"],
+    "🚗": ["汽車","car"], "🚕": ["計程車","taxi"], "🚌": ["公車","bus"], "🚲": ["腳踏車","bicycle"], "🚂": ["火車","train"], "🚀": ["火箭","rocket"],
+    "⭐": ["星星","star"], "🌈": ["彩虹","rainbow"], "🎈": ["氣球","balloon"], "🌙": ["月亮","moon"], "🎂": ["蛋糕","cake"], "⚽": ["足球","soccer ball"]
+  };
+  const POOL = Object.keys(NAMES);
+  let first = null, lock = false, matched = 0, stars = 0, dealId = 0;
+  const $ = (id) => document.getElementById(id === "stars" ? "stars" : ("memory-" + id));
+  function renderStars() { $("stars").textContent = stars ? "⭐".repeat(Math.min(stars, 8)) : ""; }
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function deal() {
+    first = null; lock = false; matched = 0; stars = 0; dealId += 1;
+    renderStars();
+    $("feedback").textContent = "";
+    $("feedback").className = "feedback";
+    const pick = shuffle(POOL).slice(0, 8);
+    const deck = shuffle(pick.concat(pick));
+    const grid = $("grid");
+    grid.innerHTML = "";
+    deck.forEach((emo, i) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "mem-card";
+      btn.dataset.emo = emo;
+      btn.dataset.i = i;
+      btn.innerHTML = '<div class="mem-inner"><div class="mem-face mem-back">？</div><div class="mem-face mem-front">' + emo + "</div></div>";
+      btn.addEventListener("click", () => flip(btn));
+      grid.appendChild(btn);
+    });
+    KidGame.ask({ q: "找相同的", box: grid });
+  }
+
+  function flip(btn) {
+    if (lock || KidGame.busy() || btn.classList.contains("flipped") || btn.classList.contains("matched")) return;
+    KidGame.ensureAudio();
+    btn.classList.add("flipped");
+    if (!first) { first = btn; return; }
+    if (first.dataset.i === btn.dataset.i) return;
+    if (first.dataset.emo === btn.dataset.emo) {
+      first.classList.add("matched");
+      btn.classList.add("matched");
+      first = null;
+      matched += 1;
+      stars += 1;
+      renderStars();
+      $("feedback").textContent = "配對成功！";
+      $("feedback").className = "feedback ok";
+      lock = true;
+      const nm = NAMES[btn.dataset.emo] || ["", ""];
+      const myDeal = dealId;
+      KidGame.celebrate(nm[0], nm[1], () => { if (myDeal !== dealId) return; lock = false; if (matched >= 8) finish(); });
+    } else {
+      lock = true;
+      $("feedback").textContent = "再試一次";
+      $("feedback").className = "feedback try";
+      KidGame.playNo();
+      const a = first, b = btn;
+      first = null;
+      setTimeout(() => {
+        a.classList.remove("flipped");
+        b.classList.remove("flipped");
+        lock = false;
+      }, 800);
+    }
+  }
+
+  function finish() { KidGame.show("memory-done"); KidGame.playParty(); KidGame.confetti(); }
+  function start() {
+    KidGame.ensureAudio();
+    KidGame.show("memory-play");
+    deal();
+  }
+  $("startBtn").addEventListener("click", start);
+  $("againBtn").addEventListener("click", start);
+})();
+
+(function () {
+  const EMOJIS = ["🍎","⭐","🎈","🍓","🌼","🐟","🍪","🧸","🦋","🍊"];
+  const NAMES = { "🍎": ["蘋果","apple","apples"], "⭐": ["星星","star","stars"], "🎈": ["氣球","balloon","balloons"], "🍓": ["草莓","strawberry","strawberries"], "🌼": ["花","flower","flowers"], "🐟": ["魚","fish","fish"], "🍪": ["餅乾","cookie","cookies"], "🧸": ["小熊","teddy bear","teddy bears"], "🦋": ["蝴蝶","butterfly","butterflies"], "🍊": ["橘子","orange","oranges"] };
+  let curEmoji = "🍎", curMode = "count";
+  const PRAISE = ["好棒！","答對了！","太厲害了！","真聰明！"];
+  const TOTAL = 10;
+  let round = 0, stars = 0, answer = 0, locked = false;
+  const $ = (id) => document.getElementById(id === "stars" ? "stars" : ("compare-" + id));
+  function renderStars() { $("stars").textContent = stars ? "⭐".repeat(Math.min(stars, 10)) : ""; }
+
+  function nextRound() {
+    locked = false;
+    $("feedback").textContent = "";
+    $("feedback").className = "feedback";
+    const emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+    const mode = Math.random() < 0.55 ? "count" : "size";
+    curEmoji = emoji; curMode = mode;
+    const row = $("row");
+    row.innerHTML = "";
+    let leftIsCorrect;
+    if (mode === "count") {
+      $("question").innerHTML = "<ruby>哪<rt>ㄋㄚˇ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>邊<rt>ㄅㄧㄢ</rt></ruby><ruby>比<rt>ㄅㄧˇ</rt></ruby><ruby>較<rt>ㄐㄧㄠˋ</rt></ruby><ruby>多<rt>ㄉㄨㄛ</rt></ruby>？";
+      let a = 1 + Math.floor(Math.random() * 6);
+      let b = 1 + Math.floor(Math.random() * 6);
+      if (a === b) b = a === 6 ? 5 : a + 1;
+      leftIsCorrect = a > b;
+      row.appendChild(side("count", emoji, a, 0));
+      row.appendChild(side("count", emoji, b, 1));
+    } else {
+      $("question").innerHTML = "<ruby>哪<rt>ㄋㄚˇ</rt></ruby><ruby>一<rt>ㄧ</rt></ruby><ruby>個<rt>ㄍㄜ˙</rt></ruby><ruby>比<rt>ㄅㄧˇ</rt></ruby><ruby>較<rt>ㄐㄧㄠˋ</rt></ruby><ruby>大<rt>ㄉㄚˋ</rt></ruby>？";
+      leftIsCorrect = Math.random() < 0.5;
+      row.appendChild(side("size", emoji, leftIsCorrect ? "big" : "small", 0));
+      row.appendChild(side("size", emoji, leftIsCorrect ? "small" : "big", 1));
+    }
+    answer = leftIsCorrect ? 0 : 1;
+    KidGame.ask({ q: mode === "count" ? "哪一邊比較多？" : "哪一個比較大？", box: row });
+  }
+
+  function side(mode, emoji, val, idx) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "compare-side" + (mode === "size" ? " " + val : "");
+    if (mode === "count") {
+      for (let i = 0; i < val; i++) {
+        const s = document.createElement("span");
+        s.className = "obj";
+        s.textContent = emoji;
+        btn.appendChild(s);
+      }
+    } else {
+      const s = document.createElement("span");
+      s.className = "obj";
+      s.textContent = emoji;
+      btn.appendChild(s);
+    }
+    btn.addEventListener("click", () => onChoose(idx, btn));
+    return btn;
+  }
+
+  function onChoose(idx, btn) {
+    if (locked || KidGame.busy()) return;
+    if (idx === answer) {
+      locked = true;
+      stars += 1; renderStars();
+      btn.classList.add("correct");
+      document.querySelectorAll(".compare-side").forEach((b) => { b.disabled = true; });
+      $("feedback").textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)];
+      $("feedback").className = "feedback ok";
+      round += 1;
+      const nm = NAMES[curEmoji] || ["", "", ""];
+      const zhSay = curMode === "count" ? "這邊的" + nm[0] + "比較多" : "這個" + nm[0] + "比較大";
+      const enSay = curMode === "count" ? "more " + nm[2] : "bigger " + nm[1];
+      KidGame.celebrate(zhSay, enSay, () => { if (round >= TOTAL) finish(); else nextRound(); });
+    } else {
+      btn.classList.remove("wrong"); void btn.offsetWidth; btn.classList.add("wrong");
+      $("feedback").textContent = "再試一次";
+      $("feedback").className = "feedback try";
+      KidGame.playNo();
+      setTimeout(() => { if (!locked) btn.classList.remove("wrong"); }, 450);
+    }
+  }
+  function finish() { KidGame.show("compare-done"); KidGame.playParty(); KidGame.confetti(); }
+  function start() {
+    KidGame.ensureAudio();
+    round = 0; stars = 0;
+    renderStars();
+    KidGame.show("compare-play");
+    nextRound();
+  }
+  $("startBtn").addEventListener("click", start);
+  $("againBtn").addEventListener("click", start);
+})();
+
+/* ===== v2 新增 5 種遊戲 ===== */
+(function () {
+  const K = KidGame;
+  const ANIMALS = [
+    { e: "🐶", zh: "小狗", zy: "ㄒㄧㄠˇ ㄍㄡˇ", en: "dog" },
+    { e: "🐱", zh: "小貓", zy: "ㄒㄧㄠˇ ㄇㄠ", en: "cat" },
+    { e: "🐰", zh: "兔子", zy: "ㄊㄨˋ ㄗ˙", en: "rabbit" },
+    { e: "🐼", zh: "熊貓", zy: "ㄒㄩㄥˊ ㄇㄠ", en: "panda" },
+    { e: "🐸", zh: "青蛙", zy: "ㄑㄧㄥ ㄨㄚ", en: "frog" },
+    { e: "🐵", zh: "猴子", zy: "ㄏㄡˊ ㄗ˙", en: "monkey" },
+    { e: "🐘", zh: "大象", zy: "ㄉㄚˋ ㄒㄧㄤˋ", en: "elephant" },
+    { e: "🦁", zh: "獅子", zy: "ㄕ ㄗ˙", en: "lion" },
+    { e: "🐯", zh: "老虎", zy: "ㄌㄠˇ ㄏㄨˇ", en: "tiger" },
+    { e: "🦒", zh: "長頸鹿", zy: "ㄔㄤˊ ㄐㄧㄥˇ ㄌㄨˋ", en: "giraffe" },
+    { e: "🐧", zh: "企鵝", zy: "ㄑㄧˋ ㄜˊ", en: "penguin" },
+    { e: "🐷", zh: "小豬", zy: "ㄒㄧㄠˇ ㄓㄨ", en: "pig" },
+    { e: "🐮", zh: "乳牛", zy: "ㄖㄨˇ ㄋㄧㄡˊ", en: "cow" },
+    { e: "🐥", zh: "小雞", zy: "ㄒㄧㄠˇ ㄐㄧ", en: "chick" },
+    { e: "🐨", zh: "無尾熊", zy: "ㄨˊ ㄨㄟˇ ㄒㄩㄥˊ", en: "koala" }
+  ];
+  const FOODS = [
+    { e: "🍎", zh: "蘋果", zy: "ㄆㄧㄥˊ ㄍㄨㄛˇ", en: "apple" },
+    { e: "🍌", zh: "香蕉", zy: "ㄒㄧㄤ ㄐㄧㄠ", en: "banana" },
+    { e: "🍇", zh: "葡萄", zy: "ㄆㄨˊ ㄊㄠˊ", en: "grapes" },
+    { e: "🍉", zh: "西瓜", zy: "ㄒㄧ ㄍㄨㄚ", en: "watermelon" },
+    { e: "🍓", zh: "草莓", zy: "ㄘㄠˇ ㄇㄟˊ", en: "strawberry" },
+    { e: "🍊", zh: "橘子", zy: "ㄐㄩˊ ㄗ˙", en: "orange" },
+    { e: "🍍", zh: "鳳梨", zy: "ㄈㄥˋ ㄌㄧˊ", en: "pineapple" },
+    { e: "🍋", zh: "檸檬", zy: "ㄋㄧㄥˊ ㄇㄥˊ", en: "lemon" },
+    { e: "🍑", zh: "桃子", zy: "ㄊㄠˊ ㄗ˙", en: "peach" },
+    { e: "🥕", zh: "胡蘿蔔", zy: "ㄏㄨˊ ㄌㄨㄛˊ ㄅㄛ˙", en: "carrot" },
+    { e: "🌽", zh: "玉米", zy: "ㄩˋ ㄇㄧˇ", en: "corn" },
+    { e: "🍅", zh: "番茄", zy: "ㄈㄢ ㄑㄧㄝˊ", en: "tomato" },
+    { e: "🥦", zh: "花椰菜", zy: "ㄏㄨㄚ ㄧㄝˊ ㄘㄞˋ", en: "broccoli" },
+    { e: "🍆", zh: "茄子", zy: "ㄑㄧㄝˊ ㄗ˙", en: "eggplant" },
+    { e: "🥝", zh: "奇異果", zy: "ㄑㄧˊ ㄧˋ ㄍㄨㄛˇ", en: "kiwi" },
+    { e: "🥔", zh: "馬鈴薯", zy: "ㄇㄚˇ ㄌㄧㄥˊ ㄕㄨˇ", en: "potato" }
+  ];
+  const ALL = ANIMALS.concat(FOODS);
+  const NUM = { 1: ["一","ㄧ","one"], 2: ["二","ㄦˋ","two"], 3: ["三","ㄙㄢ","three"], 4: ["四","ㄙˋ","four"], 5: ["五","ㄨˇ","five"], 6: ["六","ㄌㄧㄡˋ","six"], 7: ["七","ㄑㄧ","seven"], 8: ["八","ㄅㄚ","eight"], 9: ["九","ㄐㄧㄡˇ","nine"], 10: ["十","ㄕˊ","ten"] };
+  const $ = (id) => document.getElementById(id);
+
+  /* 不重複地抽題目 */
+  function bag(list) {
+    let pool = [];
+    return {
+      reset() { pool = K.shuffle(list); },
+      next() { if (!pool.length) pool = K.shuffle(list); return pool.pop(); }
+    };
+  }
+  function others(list, item, n) { return K.shuffle(list.filter((x) => x !== item)).slice(0, n); }
+
+  /* 6. 認動物 */
+  const aBag = bag(ANIMALS);
+  K.quiz({
+    id: "animals", total: 10, reset: aBag.reset,
+    make() {
+      const a = aBag.next();
+      const opts = K.shuffle([a].concat(others(ANIMALS, a, 2)));
+      return {
+        zh: a.zh, en: a.en, q: "這是什麼動物？", readOpts: true,
+        show() { const p = $("animals-pic"); p.textContent = a.e; p.style.animation = "none"; void p.offsetWidth; p.style.animation = ""; },
+        choices: opts.map((o) => ({ ok: o === a, label: o.zh, say: o.zh, html: '<span class="name">' + K.rb(o.zh, o.zy) + "</span>" }))
+      };
+    }
+  });
+
+  /* 7. 水果蔬菜：聽名字，點對的圖 */
+  const fBag = bag(FOODS);
+  const fruitGame = K.quiz({
+    id: "fruit", total: 10, reset: fBag.reset,
+    make() {
+      const f = fBag.next();
+      const opts = K.shuffle([f].concat(others(FOODS, f, 2)));
+      return {
+        zh: f.zh, en: f.en, q: f.zh + "在哪裡？", qen: f.en,
+        show() {
+          $("fruit-question").innerHTML = K.rb(f.zh, f.zy) + K.rb("在哪裡？", "ㄗㄞˋ ㄋㄚˇ ㄌㄧˇ");
+          $("fruit-word").innerHTML = K.rb(f.zh, f.zy);
+        },
+        choices: opts.map((o) => ({ ok: o === f, label: o.zh, html: '<span class="emo">' + o.e + "</span>" }))
+      };
+    }
+  });
+  $("fruit-say").addEventListener("click", () => K.replay());
+
+  /* 8. 哪個不一樣：4 個裡面有 1 個不同 */
+  K.quiz({
+    id: "odd", total: 8,
+    make() {
+      const pick = K.shuffle(ALL).slice(0, 2);
+      const same = pick[0], diff = pick[1];
+      const pos = Math.floor(Math.random() * 4);
+      const items = [0, 1, 2, 3].map((i) => (i === pos ? diff : same));
+      return {
+        zh: diff.zh, en: diff.en, q: "哪個不一樣？",
+        choices: items.map((o, i) => ({ ok: i === pos, label: o.zh, html: '<span class="emo">' + o.e + "</span>" }))
+      };
+    }
+  });
+
+  /* 9. 下一個是什麼：規律 */
+  const PATTERNS = ["AB", "AB", "AB", "AAB", "ABB", "ABC", "AB", "ABC"];
+  K.quiz({
+    id: "pattern", total: 8,
+    make(round) {
+      const type = PATTERNS[round % PATTERNS.length];
+      const pool = Math.random() < 0.5 ? FOODS : ANIMALS;
+      const parts = K.shuffle(pool).slice(0, 3);
+      const map = { A: parts[0], B: parts[1], C: parts[2] };
+      const unit = type.split("").map((ch) => map[ch]);
+      const seqLen = 5;
+      const full = [];
+      while (full.length < seqLen + 1) full.push(unit[full.length % unit.length]);
+      const shown = full.slice(0, seqLen), ans = full[seqLen];
+      let opts = [];
+      unit.forEach((u) => { if (!opts.includes(u)) opts.push(u); });
+      const extra = pool.filter((x) => !opts.includes(x));
+      while (opts.length < 3) opts.push(extra.splice(Math.floor(Math.random() * extra.length), 1)[0]);
+      opts = K.shuffle(opts.slice(0, 3));
+      return {
+        zh: ans.zh, en: ans.en, q: "下一個是什麼？",
+        show() {
+          $("pattern-seq").innerHTML = shown.map((x, i) => '<span class="s" style="animation-delay:' + (i * 0.06) + 's">' + x.e + "</span>").join("") + '<span class="q" id="pattern-q">？</span>';
+        },
+        onRight() { const q = $("pattern-q"); if (q) { q.textContent = ans.e; q.style.borderStyle = "solid"; q.style.borderColor = "#2fa36b"; } },
+        choices: opts.map((o) => ({ ok: o === ans, label: o.zh, html: '<span class="emo">' + o.e + "</span>" }))
+      };
+    }
+  });
+
+  /* 10. 數字配對：看數字，找一樣多的那一排 */
+  /* 說數量時用「兩個」，念數字時用「二」 */
+  const QTY = { 1: "一個", 2: "兩個", 3: "三個", 4: "四個", 5: "五個", 6: "六個", 7: "七個", 8: "八個", 9: "九個", 10: "十個" };
+  const NUM_EMO = ["🍎", "⭐", "🐟", "🍓", "🌼", "🎈", "🐥", "🍪"];
+  let usedN = [];
+  K.quiz({
+    id: "numbers", total: 8, reset() { usedN = []; },
+    make() {
+      let n, g = 0;
+      do { n = 1 + Math.floor(Math.random() * 10); g++; } while (usedN.includes(n) && g < 30);
+      usedN.push(n);
+      const near = [];
+      for (let i = 1; i <= 10; i++) if (i !== n) near.push(i);
+      near.sort((a, b) => Math.abs(a - n) - Math.abs(b - n));
+      const d = K.shuffle(near.slice(0, 4)).slice(0, 2);
+      const emo = NUM_EMO[Math.floor(Math.random() * NUM_EMO.length)];
+      const opts = K.shuffle([n].concat(d));
+      return {
+        zh: NUM[n][0], en: NUM[n][2], q: "哪一排有" + QTY[n] + "？",
+        show() {
+          $("numbers-digit").textContent = String(n);
+          $("numbers-zh").innerHTML = K.rb(NUM[n][0], NUM[n][1]);
+        },
+        choices: opts.map((k) => ({ ok: k === n, cls: "grp-btn", label: String(k), html: new Array(k).fill('<span class="g">' + emo + "</span>").join("") }))
+      };
+    }
+  });
+})();
+
+  </script>
+</body>
+</html>
