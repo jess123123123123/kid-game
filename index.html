@@ -8,6 +8,9 @@
   <meta name="apple-mobile-web-app-title" content="小遊戲">
   <meta name="robots" content="noindex, nofollow">
   <title>小遊戲</title>
+  <script>
+  try { if (localStorage.getItem("kid-game-ok") === "1") document.documentElement.classList.add("gate-open"); } catch (e) {}
+  </script>
   <style>
 /* 4歲小孩學習小遊戲共用樣式，無外部資源、無追蹤 */
 :root {
@@ -410,9 +413,122 @@ button.menu-card { width: 100%; color: inherit; }
 .choice.reading { opacity: 1 !important; filter: none !important; transform: scale(1.08); box-shadow: 0 0 0 5px #ffd166, 0 10px 20px rgba(0,0,0,0.15); position: relative; z-index: 2; }
 .ready-flash .choice, .ready-flash .compare-side, .ready-flash .mem-card { animation: ready-pop 0.4s ease; }
 @keyframes ready-pop { 50% { transform: scale(1.06); } }
+
+/* 進場密碼：蓋在選單前面，答對才進遊戲 */
+#gate {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 18px;
+  background: linear-gradient(180deg, var(--bg1) 0%, #b8e3ff 40%, var(--bg2) 100%);
+}
+html.gate-open #gate { display: none; }
+.gate-card {
+  width: min(100%, 440px);
+  background: var(--card);
+  border-radius: 32px;
+  box-shadow: 0 10px 0 #e6d7b8, 0 16px 32px rgba(40, 60, 90, 0.14);
+  padding: 32px 24px 28px;
+  text-align: center;
+}
+.gate-card h2 {
+  margin: 0 0 18px;
+  font-size: clamp(2rem, 8vw, 2.8rem);
+}
+.gate-input {
+  width: 100%;
+  min-height: 84px;
+  margin: 0 0 8px;
+  padding: 8px 16px;
+  border-radius: 24px;
+  border: 4px solid #ffe08a;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 2.4rem;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0.28em;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.gate-input:focus { outline: 3px solid #ff7a59; outline-offset: 2px; }
+.gate-msg {
+  min-height: 1.6em;
+  margin: 4px 0 14px;
+  color: #c45a2a;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+.gate-card .primary { width: 100%; min-width: 0; }
   </style>
 </head>
 <body>
+  <div id="gate">
+    <form class="gate-card" id="gate-form" autocomplete="off" novalidate>
+      <div class="party" aria-hidden="true">🔒🌟</div>
+      <h2>請輸入密碼</h2>
+      <input id="gate-code" class="gate-input" type="text" inputmode="numeric" maxlength="8" enterkeyhint="go" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="請輸入密碼">
+      <p class="gate-msg" id="gate-msg" role="alert"></p>
+      <button class="primary" type="submit">開始玩</button>
+    </form>
+  </div>
+  <script>
+  (function () {
+    var HASH = "5df4de09309fadc804326572361795c3357927c51af508219e362ea727524661";
+    var KEY = "kid-game-ok";
+    var form = document.getElementById("gate-form");
+    var input = document.getElementById("gate-code");
+    var msg = document.getElementById("gate-msg");
+
+    function appEl() { return document.getElementById("app"); }
+
+    function unlock() {
+      document.documentElement.classList.add("gate-open");
+      var gate = document.getElementById("gate");
+      var app = appEl();
+      if (gate) gate.setAttribute("aria-hidden", "true");
+      if (app) app.removeAttribute("aria-hidden");
+      try { localStorage.setItem(KEY, "1"); } catch (e) {}
+    }
+
+    function deny() {
+      msg.textContent = "密碼不對，再試一次";
+      input.value = "";
+      input.focus();
+    }
+
+    function toHex(buf) {
+      var bytes = new Uint8Array(buf);
+      var s = "";
+      for (var i = 0; i < bytes.length; i++) s += bytes[i].toString(16).padStart(2, "0");
+      return s;
+    }
+
+    function applyRemembered() {
+      var app = appEl();
+      var remembered = false;
+      try { remembered = localStorage.getItem(KEY) === "1"; } catch (e) {}
+      if (remembered) unlock();
+      else if (app) app.setAttribute("aria-hidden", "true");
+    }
+    applyRemembered();
+    document.addEventListener("DOMContentLoaded", applyRemembered);
+
+    form.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var code = String(input.value || "").replace(/\D/g, "");
+      if (!code || !window.crypto || !crypto.subtle || typeof TextEncoder === "undefined") { deny(); return; }
+      crypto.subtle.digest("SHA-256", new TextEncoder().encode(code)).then(function (digest) {
+        if (toHex(digest) === HASH) unlock();
+        else deny();
+      }).catch(deny);
+    });
+  })();
+  </script>
   <div id="confetti"></div>
   <div id="app">
     <div class="topbar">
